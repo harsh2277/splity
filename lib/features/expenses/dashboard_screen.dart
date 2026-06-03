@@ -179,7 +179,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
 
               // ── CARD SLIDER (DUAL MODE) ───────────────────────────
               SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.only(left: 20, right: 20, top: 12, bottom: 0),
                 sliver: SliverToBoxAdapter(
                   child: Column(
                     children: [
@@ -193,8 +193,14 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                             });
                           },
                           children: [
-                            _buildSharedBalanceCard(isDark),
-                            _buildPersonalBudgetCard(isDark),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                              child: _buildSharedBalanceCard(isDark),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                              child: _buildPersonalBudgetCard(isDark),
+                            ),
                           ],
                         ),
                       ),
@@ -221,45 +227,9 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 ),
               ),
 
-              // ── QUICK ACTIONS ────────────────────────────────────
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                sliver: SliverToBoxAdapter(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _buildActionButton(
-                          context: context,
-                          label: 'Add Expense',
-                          icon: Icons.add_rounded,
-                          color: isDark ? AppColors.primary500 : AppColors.primary600,
-                          textColor: AppColors.white,
-                          onTap: () {
-                            // TODO: Navigate to Add Expense screen
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildActionButton(
-                          context: context,
-                          label: 'Settle Up',
-                          icon: Icons.payment_rounded,
-                          color: isDark ? AppColors.darkSurface : AppColors.white,
-                          textColor: isDark ? AppColors.neutral50 : AppColors.neutral900,
-                          onTap: () {
-                            // TODO: Navigate to Settle Up list
-                          },
-                          border: Border.all(
-                            color: isDark ? AppColors.darkSurface3 : AppColors.neutral200,
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              // ── ALL GROUPS ───────────────────────────────────────
+              _buildSectionHeader(context, isDark, 'Active Groups'),
+              _buildQuickGroupsSection(isDark),
 
               // ── RECENT ACTIVITY HEADER ───────────────────────────
               SliverPadding(
@@ -276,22 +246,44 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                           color: isDark ? AppColors.neutral50 : AppColors.neutral900,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      TabBar(
-                        controller: _tabController,
-                        indicatorSize: TabBarIndicatorSize.tab,
-                        dividerColor: Colors.transparent,
-                        labelColor: isDark ? AppColors.primary300 : AppColors.primary700,
-                        unselectedLabelColor: isDark ? AppColors.neutral500 : AppColors.neutral400,
-                        indicator: BoxDecoration(
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColors.darkSurface : AppColors.neutral100,
                           borderRadius: BorderRadius.circular(100),
-                          color: isDark ? AppColors.primary900.withOpacity(0.3) : AppColors.primary50,
                         ),
-                        tabs: const [
-                          Tab(text: 'All'),
-                          Tab(text: 'Shared'),
-                          Tab(text: 'Personal'),
-                        ],
+                        child: TabBar(
+                          controller: _tabController,
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          dividerColor: Colors.transparent,
+                          labelColor: isDark ? AppColors.neutral50 : AppColors.neutral900,
+                          unselectedLabelColor: isDark ? AppColors.neutral500 : AppColors.neutral600,
+                          labelStyle: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          unselectedLabelStyle: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          indicator: BoxDecoration(
+                            borderRadius: BorderRadius.circular(100),
+                            color: isDark ? AppColors.darkSurface3 : Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          tabs: const [
+                            Tab(text: 'All'),
+                            Tab(text: 'Shared'),
+                            Tab(text: 'Personal'),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -313,9 +305,17 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                       }).toList();
 
                       if (filteredList.isEmpty) {
-                        return Center(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 40),
+                        return Container(
+                          padding: const EdgeInsets.symmetric(vertical: 40),
+                          decoration: BoxDecoration(
+                            color: isDark ? AppColors.darkSurface : AppColors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: isDark ? AppColors.darkSurface2 : AppColors.neutral200,
+                              width: 1,
+                            ),
+                          ),
+                          child: Center(
                             child: Text(
                               'No transactions found',
                               style: TextStyle(
@@ -326,111 +326,133 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                         );
                       }
 
-                      return ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: filteredList.length,
-                        separatorBuilder: (context, index) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          final item = filteredList[index];
-                          final isPersonal = item['isPersonal'];
-                          final isOwed = item['isOwed'];
-                          
-                          Color amountColor;
-                          String prefix = '';
-                          if (isPersonal) {
-                            amountColor = isDark ? AppColors.neutral300 : AppColors.neutral800;
-                          } else if (isOwed) {
-                            amountColor = AppColors.error500;
-                            prefix = '-';
-                          } else {
-                            amountColor = AppColors.success500;
-                            prefix = '+';
-                          }
-
-                          return Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: isDark ? AppColors.darkSurface : AppColors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: isDark ? AppColors.darkSurface2 : AppColors.neutral200,
-                                width: 1,
-                              ),
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColors.darkSurface : AppColors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: isDark
+                                  ? Colors.black.withValues(alpha: 0.2)
+                                  : Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
                             ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: _getCategoryColor(item['category'], isDark),
-                                    borderRadius: BorderRadius.circular(12),
+                          ],
+                          border: Border.all(
+                            color: isDark ? AppColors.darkSurface2 : AppColors.neutral200.withValues(alpha: 0.8),
+                            width: 1,
+                          ),
+                        ),
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          padding: const EdgeInsets.all(8),
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: filteredList.length,
+                          separatorBuilder: (context, index) => Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: isDark ? AppColors.darkSurface2 : AppColors.neutral100,
+                          ),
+                          itemBuilder: (context, index) {
+                            final item = filteredList[index];
+                            final isPersonal = item['isPersonal'];
+                            final isOwed = item['isOwed'];
+                            
+                            Color amountColor;
+                            String prefix = '';
+                            if (isPersonal) {
+                              amountColor = isDark ? AppColors.neutral300 : AppColors.neutral800;
+                            } else if (isOwed) {
+                              amountColor = AppColors.error500;
+                              prefix = '-';
+                            } else {
+                              amountColor = AppColors.success500;
+                              prefix = '+';
+                            }
+
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      color: _getCategoryColor(item['category'], isDark),
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: Icon(
+                                      _getCategoryIcon(item['category']),
+                                      color: _getCategoryIconColor(item['category'], isDark),
+                                      size: 20,
+                                    ),
                                   ),
-                                  child: Icon(
-                                    _getCategoryIcon(item['category']),
-                                    color: _getCategoryIconColor(item['category'], isDark),
-                                    size: 20,
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item['title'],
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: isDark ? AppColors.neutral50 : AppColors.neutral900,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          item['subtitle'],
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                            color: isDark ? AppColors.neutral500 : AppColors.neutral500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                  const SizedBox(width: 8),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       Text(
-                                        item['title'],
+                                        '$prefix${item['amount']}',
                                         style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: isDark ? AppColors.neutral50 : AppColors.neutral900,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                          color: amountColor,
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      const SizedBox(height: 2),
+                                      const SizedBox(height: 4),
                                       Text(
-                                        item['subtitle'],
+                                        item['date'],
                                         style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w500,
-                                          color: isDark ? AppColors.neutral500 : AppColors.neutral500,
+                                          fontSize: 10,
+                                          color: isDark ? AppColors.neutral600 : AppColors.neutral400,
                                         ),
                                       ),
                                     ],
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      '$prefix${item['amount']}',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w700,
-                                        color: amountColor,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      item['date'],
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 10,
-                                        color: isDark ? AppColors.neutral600 : AppColors.neutral400,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          );
-                        },
+                                ],
+                              ),
+                            );
+                          },
+                        ),
                       );
                     },
                   ),
                 ),
               ),
+
+              // ── UPCOMING BILLS ───────────────────────────────────
+              _buildSectionHeader(context, isDark, 'Upcoming Bills'),
+              _buildUpcomingRecurringSection(isDark),
+
+              const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
             ],
           ),
         ),
@@ -440,101 +462,78 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
 
   Widget _buildSharedBalanceCard(bool isDark) {
     return Container(
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [const Color(0xFF1E2243), const Color(0xFF13152C)]
-              : [AppColors.primary600, AppColors.primary800],
+        color: isDark ? AppColors.darkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? AppColors.darkSurface2 : AppColors.neutral200,
+          width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: (isDark ? AppColors.black : AppColors.primary500).withOpacity(0.2),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
       ),
-      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'SHARED OFFICE SPENDS',
+                'Shared Office Spends',
                 style: GoogleFonts.plusJakartaSans(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.white.withOpacity(0.6),
-                  letterSpacing: 1.5,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? AppColors.neutral300 : AppColors.neutral600,
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.people_alt_rounded,
-                color: AppColors.white,
+                color: isDark ? AppColors.neutral400 : AppColors.neutral500,
                 size: 20,
               ),
             ],
           ),
-          const Spacer(),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Net Balance',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  color: isDark ? AppColors.neutral500 : AppColors.neutral500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '₹1,085.00',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? AppColors.neutral50 : AppColors.neutral900,
+                ),
+              ),
+            ],
+          ),
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Owed to You',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.white.withOpacity(0.8),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '₹1,250.00',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.white,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'Owed to you: ₹1,250.00',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.success500,
+                  ),
                 ),
               ),
-              Container(
-                height: 40,
-                width: 1,
-                color: AppColors.white.withOpacity(0.2),
-              ),
-              const SizedBox(width: 24),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'You Owe',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.white.withOpacity(0.8),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '₹165.00',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.warning300,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'You owe: ₹165.00',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.error500,
+                  ),
                 ),
               ),
             ],
@@ -550,134 +549,249 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     const double progress = spent / limit;
 
     return Container(
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [const Color(0xFF0F2C2C), const Color(0xFF0B1919)]
-              : [const Color(0xFF0F766E), const Color(0xFF115E59)],
+        color: isDark ? AppColors.darkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? AppColors.darkSurface2 : AppColors.neutral200,
+          width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: (isDark ? AppColors.black : const Color(0xFF0F766E)).withOpacity(0.2),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
       ),
-      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'PERSONAL SPENDING LIMIT',
+                'Personal Budget',
                 style: GoogleFonts.plusJakartaSans(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.white.withOpacity(0.6),
-                  letterSpacing: 1.5,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? AppColors.neutral300 : AppColors.neutral600,
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.wallet_rounded,
-                color: AppColors.white,
+                color: isDark ? AppColors.neutral400 : AppColors.neutral500,
                 size: 20,
               ),
             ],
           ),
-          const Spacer(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Text(
+                'Spent this month',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  color: isDark ? AppColors.neutral500 : AppColors.neutral500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Spent this month',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.white.withOpacity(0.8),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
                   Text(
                     '₹6,240.00',
                     style: GoogleFonts.plusJakartaSans(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? AppColors.neutral50 : AppColors.neutral900,
+                    ),
+                  ),
+                  Text(
+                    'Limit: ₹10k',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? AppColors.neutral400 : AppColors.neutral600,
                     ),
                   ),
                 ],
               ),
-              Text(
-                'Limit: ₹10k',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.white.withOpacity(0.8),
+            ],
+          ),
+          Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '62.4% Used',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      color: isDark ? AppColors.neutral400 : AppColors.neutral500,
+                    ),
+                  ),
+                  Text(
+                    '₹3,760.00 Left',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      color: isDark ? AppColors.neutral400 : AppColors.neutral500,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 6,
+                  backgroundColor: isDark ? AppColors.darkSurface3 : AppColors.neutral200,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    isDark ? AppColors.primary400 : AppColors.primary600,
+                  ),
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(100),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 8,
-              backgroundColor: AppColors.white.withOpacity(0.2),
-              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.warning300),
-            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildActionButton({
-    required BuildContext context,
-    required String label,
-    required IconData icon,
-    required Color color,
-    required Color textColor,
-    required VoidCallback onTap,
-    BoxBorder? border,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+  // Helper to build headers for sections
+  Widget _buildSectionHeader(BuildContext context, bool isDark, String title) {
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 10),
+      sliver: SliverToBoxAdapter(
+        child: Text(
+          title,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: isDark ? AppColors.neutral50 : AppColors.neutral900,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Quick Groups Section Widget
+  Widget _buildQuickGroupsSection(bool isDark) {
+    final List<Map<String, dynamic>> groups = [
+      {'name': 'Office Chai ☕', 'members': '8 Members', 'balance': 'Owe ₹40.00'},
+      {'name': 'Friday Lunch 🍔', 'members': '5 Members', 'balance': 'Owed ₹450.00'},
+      {'name': 'Flatmates 🏠', 'members': '3 Members', 'balance': 'Settled'},
+    ];
+
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      sliver: SliverToBoxAdapter(
+        child: SizedBox(
+          height: 100,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: groups.length,
+            separatorBuilder: (context, index) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final g = groups[index];
+              return Container(
+                width: 150,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkSurface : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDark ? AppColors.darkSurface2 : AppColors.neutral200,
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      g['name'],
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? AppColors.neutral50 : AppColors.neutral900,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      g['members'],
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark ? AppColors.neutral500 : AppColors.neutral500,
+                      ),
+                    ),
+                    Text(
+                      g['balance'],
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: g['balance'].contains('Owed')
+                            ? AppColors.success500
+                            : g['balance'].contains('Owe')
+                                ? AppColors.error500
+                                : AppColors.neutral500,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Upcoming Recurring Bills Widget
+  Widget _buildUpcomingRecurringSection(bool isDark) {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      sliver: SliverToBoxAdapter(
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: color,
+            color: isDark ? AppColors.darkSurface : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: border,
+            border: Border.all(
+              color: isDark ? AppColors.darkSurface2 : AppColors.neutral200,
+              width: 1,
+            ),
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                icon,
-                color: textColor,
-                size: 20,
+              Icon(Icons.wifi, color: isDark ? AppColors.primary400 : AppColors.primary600, size: 24),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Office Broadband Wifi',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? AppColors.neutral50 : AppColors.neutral900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Due in 3 Days • Split equally',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark ? AppColors.neutral400 : AppColors.neutral500,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(width: 8),
               Text(
-                label,
+                '₹799.00',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: textColor,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? AppColors.neutral50 : AppColors.neutral900,
                 ),
               ),
             ],
@@ -686,4 +800,5 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
       ),
     );
   }
+
 }

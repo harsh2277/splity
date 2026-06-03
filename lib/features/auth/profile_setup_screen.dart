@@ -56,12 +56,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       hasError = true;
     }
 
-    if (upi.isEmpty) {
-      setState(() {
-        _upiError = 'UPI ID is required';
-      });
-      hasError = true;
-    } else if (!RegExp(r'^[\w\.\-_]{2,256}@[a-zA-Z]{2,64}$').hasMatch(upi)) {
+    if (upi.isNotEmpty && !RegExp(r'^[\w\.\-_]{2,256}@[a-zA-Z]{2,64}$').hasMatch(upi)) {
       setState(() {
         _upiError = 'Please enter a valid UPI ID (e.g., john@oksbi)';
       });
@@ -226,7 +221,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
                         AppTextField(
                           controller: _upiController,
-                          label: 'UPI ID (For Settlement)',
+                          label: 'UPI ID (Optional)',
                           hint: 'e.g. name@oksbi',
                           errorText: _upiError,
                           keyboardType: TextInputType.emailAddress,
