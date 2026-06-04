@@ -9,8 +9,7 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _DashboardScreenState extends State<DashboardScreen> {
   final PageController _cardPageController = PageController();
   int _currentCardIndex = 0;
 
@@ -66,12 +65,10 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
     _cardPageController.dispose();
     super.dispose();
   }
@@ -157,20 +154,32 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                           ),
                         ],
                       ),
-                      Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: isDark ? AppColors.darkSurface3 : AppColors.neutral200,
-                            width: 2,
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              Icons.notifications_none_outlined,
+                              color: isDark ? AppColors.neutral300 : AppColors.neutral700,
+                              size: 24,
+                            ),
+                            onPressed: () {
+                              // Open Notification Centre
+                            },
                           ),
-                        ),
-                        child: const CircleAvatar(
-                          radius: 20,
-                          backgroundImage: NetworkImage(
-                            'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80',
+                          Positioned(
+                            right: 10,
+                            top: 10,
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: AppColors.error500,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
@@ -235,57 +244,13 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                 sliver: SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Recent Activity',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: isDark ? AppColors.neutral50 : AppColors.neutral900,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: isDark ? AppColors.darkSurface : AppColors.neutral100,
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        child: TabBar(
-                          controller: _tabController,
-                          indicatorSize: TabBarIndicatorSize.tab,
-                          dividerColor: Colors.transparent,
-                          labelColor: isDark ? AppColors.neutral50 : AppColors.neutral900,
-                          unselectedLabelColor: isDark ? AppColors.neutral500 : AppColors.neutral600,
-                          labelStyle: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          unselectedLabelStyle: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          indicator: BoxDecoration(
-                            borderRadius: BorderRadius.circular(100),
-                            color: isDark ? AppColors.darkSurface3 : Colors.white,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          tabs: const [
-                            Tab(text: 'All'),
-                            Tab(text: 'Shared'),
-                            Tab(text: 'Personal'),
-                          ],
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    'Recent Activity',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? AppColors.neutral50 : AppColors.neutral900,
+                    ),
                   ),
                 ),
               ),
@@ -294,163 +259,129 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 sliver: SliverToBoxAdapter(
-                  child: AnimatedBuilder(
-                    animation: _tabController,
-                    builder: (context, _) {
-                      // Filter list based on selected tab index
-                      final filteredList = _activities.where((activity) {
-                        if (_tabController.index == 1) return !activity['isPersonal'];
-                        if (_tabController.index == 2) return activity['isPersonal'];
-                        return true;
-                      }).toList();
-
-                      if (filteredList.isEmpty) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(vertical: 40),
-                          decoration: BoxDecoration(
-                            color: isDark ? AppColors.darkSurface : AppColors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: isDark ? AppColors.darkSurface2 : AppColors.neutral200,
-                              width: 1,
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'No transactions found',
-                              style: TextStyle(
-                                color: isDark ? AppColors.neutral600 : AppColors.neutral400,
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: isDark ? AppColors.darkSurface : AppColors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: isDark
-                                  ? Colors.black.withValues(alpha: 0.2)
-                                  : Colors.black.withValues(alpha: 0.04),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                          border: Border.all(
-                            color: isDark ? AppColors.darkSurface2 : AppColors.neutral200.withValues(alpha: 0.8),
-                            width: 1,
-                          ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.darkSurface : AppColors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: isDark
+                              ? Colors.black.withValues(alpha: 0.2)
+                              : Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
                         ),
-                        child: ListView.separated(
-                          shrinkWrap: true,
-                          padding: const EdgeInsets.all(8),
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: filteredList.length,
-                          separatorBuilder: (context, index) => Divider(
-                            height: 1,
-                            thickness: 1,
-                            color: isDark ? AppColors.darkSurface2 : AppColors.neutral100,
-                          ),
-                          itemBuilder: (context, index) {
-                            final item = filteredList[index];
-                            final isPersonal = item['isPersonal'];
-                            final isOwed = item['isOwed'];
-                            
-                            Color amountColor;
-                            String prefix = '';
-                            if (isPersonal) {
-                              amountColor = isDark ? AppColors.neutral300 : AppColors.neutral800;
-                            } else if (isOwed) {
-                              amountColor = AppColors.error500;
-                              prefix = '-';
-                            } else {
-                              amountColor = AppColors.success500;
-                              prefix = '+';
-                            }
+                      ],
+                      border: Border.all(
+                        color: isDark ? AppColors.darkSurface2 : AppColors.neutral200.withValues(alpha: 0.8),
+                        width: 1,
+                      ),
+                    ),
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      padding: const EdgeInsets.all(8),
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _activities.length,
+                      separatorBuilder: (context, index) => Divider(
+                        height: 1,
+                        thickness: 1,
+                        color: isDark ? AppColors.darkSurface2 : AppColors.neutral100,
+                      ),
+                      itemBuilder: (context, index) {
+                        final item = _activities[index];
+                        final isPersonal = item['isPersonal'];
+                        final isOwed = item['isOwed'];
+                        
+                        Color amountColor;
+                        String prefix = '';
+                        if (isPersonal) {
+                          amountColor = isDark ? AppColors.neutral300 : AppColors.neutral800;
+                        } else if (isOwed) {
+                          amountColor = AppColors.error500;
+                          prefix = '-';
+                        } else {
+                          amountColor = AppColors.success500;
+                          prefix = '+';
+                        }
 
-                            return Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                              child: Row(
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: _getCategoryColor(item['category'], isDark),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Icon(
+                                  _getCategoryIcon(item['category']),
+                                  color: _getCategoryIconColor(item['category'], isDark),
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item['title'],
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: isDark ? AppColors.neutral50 : AppColors.neutral900,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      item['subtitle'],
+                                      style: GoogleFonts.plusJakartaSans(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: isDark ? AppColors.neutral500 : AppColors.neutral500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Container(
-                                    width: 44,
-                                    height: 44,
-                                    decoration: BoxDecoration(
-                                      color: _getCategoryColor(item['category'], isDark),
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
-                                    child: Icon(
-                                      _getCategoryIcon(item['category']),
-                                      color: _getCategoryIconColor(item['category'], isDark),
-                                      size: 20,
+                                  Text(
+                                    '$prefix${item['amount']}',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: amountColor,
                                     ),
                                   ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          item['title'],
-                                          style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: isDark ? AppColors.neutral50 : AppColors.neutral900,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          item['subtitle'],
-                                          style: GoogleFonts.plusJakartaSans(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w500,
-                                            color: isDark ? AppColors.neutral500 : AppColors.neutral500,
-                                          ),
-                                        ),
-                                      ],
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    item['date'],
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 10,
+                                      color: isDark ? AppColors.neutral600 : AppColors.neutral400,
                                     ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        '$prefix${item['amount']}',
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w700,
-                                          color: amountColor,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        item['date'],
-                                        style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 10,
-                                          color: isDark ? AppColors.neutral600 : AppColors.neutral400,
-                                        ),
-                                      ),
-                                    ],
                                   ),
                                 ],
                               ),
-                            );
-                          },
-                        ),
-                      );
-                    },
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
 
-              // ── UPCOMING BILLS ───────────────────────────────────
-              _buildSectionHeader(context, isDark, 'Upcoming Bills'),
-              _buildUpcomingRecurringSection(isDark),
+              // ── UPCOMING SETTLE UP ───────────────────────────────
+              _buildSectionHeader(context, isDark, 'Upcoming Settle Up'),
+              _buildUpcomingSettleUpSection(isDark),
 
               const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
             ],
@@ -686,9 +617,51 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
           height: 100,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            itemCount: groups.length,
+            itemCount: groups.length + 1,
             separatorBuilder: (context, index) => const SizedBox(width: 12),
             itemBuilder: (context, index) {
+              if (index == groups.length) {
+                return InkWell(
+                  onTap: () {
+                    // Trigger Create/Join Group action
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    width: 150,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.darkSurface.withValues(alpha: 0.5) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isDark ? AppColors.darkSurface3 : AppColors.neutral300,
+                        width: 1.5,
+                        style: BorderStyle.solid,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.add_circle_outline_rounded,
+                          color: isDark ? AppColors.primary400 : AppColors.primary600,
+                          size: 24,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Create/Join Group',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? AppColors.neutral300 : AppColors.neutral700,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
               final g = groups[index];
               return Container(
                 width: 150,
@@ -744,8 +717,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     );
   }
 
-  // Upcoming Recurring Bills Widget
-  Widget _buildUpcomingRecurringSection(bool isDark) {
+  // Upcoming Settle Up Widget
+  Widget _buildUpcomingSettleUpSection(bool isDark) {
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       sliver: SliverToBoxAdapter(
@@ -761,14 +734,25 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
           ),
           child: Row(
             children: [
-              Icon(Icons.wifi, color: isDark ? AppColors.primary400 : AppColors.primary600, size: 24),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.primary900.withValues(alpha: 0.4) : AppColors.primary100,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.handshake_outlined,
+                  color: isDark ? AppColors.primary400 : AppColors.primary600,
+                  size: 24,
+                ),
+              ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Office Broadband Wifi',
+                      'Settle with Rohit (Office Admin)',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
@@ -777,7 +761,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Due in 3 Days • Split equally',
+                      'Office Chai Group • Pending payment',
                       style: TextStyle(
                         fontSize: 11,
                         color: isDark ? AppColors.neutral400 : AppColors.neutral500,
@@ -786,13 +770,27 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                   ],
                 ),
               ),
-              Text(
-                '₹799.00',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? AppColors.neutral50 : AppColors.neutral900,
-                ),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '₹165.00',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.error500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'You owe',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 10,
+                      color: isDark ? AppColors.neutral500 : AppColors.neutral500,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

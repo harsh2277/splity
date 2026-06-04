@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../expenses/dashboard_screen.dart';
 import '../groups/groups_list_screen.dart';
 import '../personal/personal_tracker_screen.dart';
-import '../settings/settings_screen.dart';
+import '../settings/profile_screen.dart';
 
 class NavigationShell extends StatefulWidget {
   const NavigationShell({super.key});
@@ -18,7 +18,7 @@ class _NavigationShellState extends State<NavigationShell> {
     DashboardScreen(),
     GroupsListScreen(),
     PersonalTrackerScreen(),
-    SettingsScreen(),
+    ProfileScreen(),
   ];
 
   @override
@@ -52,9 +52,9 @@ class _NavigationShellState extends State<NavigationShell> {
             label: 'Personal',
           ),
           NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Settings',
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profile',
           ),
         ],
       ),
