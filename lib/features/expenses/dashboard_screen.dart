@@ -116,9 +116,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      body: SafeArea(
-        child: RefreshIndicator(
+    return SafeArea(
+      bottom: false,
+      child: RefreshIndicator(
           onRefresh: () async {
             await Future.delayed(const Duration(seconds: 1));
           },
@@ -387,8 +387,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildSharedBalanceCard(bool isDark) {
