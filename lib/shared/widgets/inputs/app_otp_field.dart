@@ -165,8 +165,8 @@ class _AppOtpFieldState extends State<AppOtpField> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: !widget.enabled
-                        ? (isDark ? c.surface3 : c.neutral200)
-                        : (isDark ? c.surface3 : c.neutral200),
+                        ? (isDark ? c.surface : Colors.white)
+                        : (isDark ? c.surface : Colors.white),
                     border: Border.all(
                       color: borderColor,
                       width: isFocused ? 1.5 : 1.0,

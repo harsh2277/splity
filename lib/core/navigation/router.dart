@@ -4,6 +4,9 @@ import '../../features/auth/onboarding_screen.dart';
 import '../../features/auth/otp_screen.dart';
 import '../../features/auth/profile_setup_screen.dart';
 import '../../features/home/navigation_shell.dart';
+import '../../features/groups/create_group_screen.dart';
+import '../../features/groups/join_group_screen.dart';
+import '../../features/groups/group_details_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -28,6 +31,22 @@ final GoRouter appRouter = GoRouter(
       path: '/dashboard-demo',
       builder: (context, state) => const NavigationShell(),
     ),
+    GoRoute(
+      path: '/create-group',
+      builder: (context, state) => const CreateGroupScreen(),
+    ),
+    GoRoute(
+      path: '/join-group',
+      builder: (context, state) => const JoinGroupScreen(),
+    ),
+    GoRoute(
+      path: '/group-details/:id',
+      builder: (context, state) {
+        final id = state.pathParameters['id'] ?? '';
+        return GroupDetailsScreen(groupId: id);
+      },
+    ),
+
   ],
 );
 

@@ -83,7 +83,7 @@ class _AppSearchFieldState extends State<AppSearchField> {
         children: [
           const SizedBox(width: 14),
           Icon(
-            Iconsax.search_normal,
+            Icons.search_rounded,
             size: AppConstants.iconMd,
             color: _isFocused
                 ? (isDark ? c.primary400 : c.primary600)
