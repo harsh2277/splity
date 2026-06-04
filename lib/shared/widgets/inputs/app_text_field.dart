@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme_extensions.dart';
 
@@ -43,8 +43,8 @@ class AppTextField extends StatefulWidget {
   final String? hint;
   final String? helperText;
   final String? errorText;
-  final IconData? prefixIcon;
-  final IconData? suffixIcon;
+  final List<List<dynamic>>? prefixIcon;
+  final List<List<dynamic>>? suffixIcon;
   final VoidCallback? onSuffixTap;
   final bool isPassword;
   final bool isMultiline;
@@ -210,12 +210,16 @@ class _AppTextFieldState extends State<AppTextField> {
                           child: child,
                         );
                       },
-                      child: Icon(
-                        widget.prefixIcon,
-                        size: AppConstants.iconMd,
-                        color: _isFocused
-                            ? (isDark ? c.primary400 : c.primary600)
-                            : (isDark ? c.neutral400 : c.neutral500),
+                      child: Center(
+                        widthFactor: 1.0,
+                        heightFactor: 1.0,
+                        child: HugeIcon(
+                          icon: widget.prefixIcon!,
+                          size: AppConstants.iconMd,
+                          color: _isFocused
+                              ? (isDark ? c.primary400 : c.primary600)
+                              : (isDark ? c.neutral400 : c.neutral500),
+                        ),
                       ),
                     )
                   : null,
@@ -242,7 +246,7 @@ class _AppTextFieldState extends State<AppTextField> {
           const SizedBox(height: AppConstants.sp6),
           Row(
             children: [
-              Icon(Iconsax.info_circle, size: 14, color: c.error500),
+              HugeIcon(icon: HugeIcons.strokeRoundedInformationCircle, size: 14, color: c.error500),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(

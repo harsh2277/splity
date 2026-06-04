@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 import '../expenses/dashboard_screen.dart';
 import '../groups/groups_list_screen.dart';
@@ -60,11 +61,11 @@ class _NavigationShellState extends State<NavigationShell> {
                 decoration: const BoxDecoration(),
                 child: Row(
                   children: [
-                    _buildNavItem(0, Icons.home_outlined, Icons.home_rounded, 'Home', activeColor, isDark),
-                    _buildNavItem(1, Icons.group_outlined, Icons.group_rounded, 'Groups', activeColor, isDark),
+                    _buildNavItem(0, HugeIcons.strokeRoundedHome01, HugeIcons.strokeRoundedHome01, 'Home', activeColor, isDark),
+                    _buildNavItem(1, HugeIcons.strokeRoundedUserGroup, HugeIcons.strokeRoundedUserGroup, 'Groups', activeColor, isDark),
                     const SizedBox(width: 90), // Precise space reservation for 68px notched FAB
-                    _buildNavItem(2, Icons.account_balance_wallet_outlined, Icons.account_balance_wallet_rounded, 'Personal', activeColor, isDark),
-                    _buildNavItem(3, Icons.person_outline_rounded, Icons.person_rounded, 'Profile', activeColor, isDark),
+                    _buildNavItem(2, HugeIcons.strokeRoundedUser, HugeIcons.strokeRoundedUser, 'Member', activeColor, isDark),
+                    _buildNavItem(3, HugeIcons.strokeRoundedMoreHorizontal, HugeIcons.strokeRoundedMoreHorizontal, 'More', activeColor, isDark),
                   ],
                 ),
               ),
@@ -75,7 +76,7 @@ class _NavigationShellState extends State<NavigationShell> {
     );
   }
 
-  Widget _buildNavItem(int index, IconData outlineIcon, IconData solidIcon, String label, Color activeColor, bool isDark) {
+  Widget _buildNavItem(int index, List<List<dynamic>> outlineIcon, List<List<dynamic>> solidIcon, String label, Color activeColor, bool isDark) {
     final isSelected = _currentIndex == index;
 
     return Expanded(
@@ -108,8 +109,8 @@ class _NavigationShellState extends State<NavigationShell> {
                 duration: const Duration(milliseconds: 250),
                 scale: isSelected ? 1.15 : 1.0,
                 curve: Curves.easeOutBack,
-                child: Icon(
-                  isSelected ? solidIcon : outlineIcon,
+                child: HugeIcon(
+                  icon: isSelected ? solidIcon : outlineIcon,
                   color: isSelected
                       ? activeColor
                       : (isDark ? AppColors.neutral500 : AppColors.neutral400),
@@ -167,10 +168,12 @@ class _NavigationShellState extends State<NavigationShell> {
               ),
             ],
           ),
-          child: const Icon(
-            Icons.add,
-            color: Colors.white,
-            size: 32,
+          child: const Center(
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedAdd01,
+              color: Colors.white,
+              size: 28,
+            ),
           ),
         ),
       ),

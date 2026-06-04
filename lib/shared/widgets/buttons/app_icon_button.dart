@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme_extensions.dart';
 
@@ -25,7 +26,7 @@ class AppIconButton extends StatelessWidget {
     this.isDanger = false,
   });
 
-  final IconData icon;
+  final List<List<dynamic>> icon;
   final VoidCallback? onPressed;
   final AppIconButtonVariant variant;
   final AppIconButtonSize size;
@@ -107,7 +108,7 @@ class AppIconButton extends StatelessWidget {
                 )
               : null,
           alignment: Alignment.center,
-          child: Icon(icon, size: _iconSize, color: fg),
+          child: HugeIcon(icon: icon, size: _iconSize, color: fg),
         ),
       ),
     );

@@ -69,6 +69,7 @@ dependencies:
   # Typography
   google_fonts: ^6.2.1
   iconsax_flutter: ^1.0.1
+  hugeicons: ^1.1.7
 
 
 dev_dependencies:

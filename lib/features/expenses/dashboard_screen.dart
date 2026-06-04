@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -73,16 +74,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.dispose();
   }
 
-  IconData _getCategoryIcon(String category) {
+  List<List<dynamic>> _getCategoryIcon(String category) {
     switch (category) {
       case 'food':
-        return Icons.restaurant;
+        return HugeIcons.strokeRoundedRestaurant;
       case 'travel':
-        return Icons.directions_car;
+        return HugeIcons.strokeRoundedCar01;
       case 'bills':
-        return Icons.receipt_long;
+        return HugeIcons.strokeRoundedReceiptText;
       default:
-        return Icons.category;
+        return HugeIcons.strokeRoundedGrid;
     }
   }
 
@@ -158,8 +159,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         clipBehavior: Clip.none,
                         children: [
                           IconButton(
-                            icon: Icon(
-                              Icons.notifications_none_outlined,
+                            icon: HugeIcon(
+                              icon: HugeIcons.strokeRoundedNotification01,
                               color: isDark ? AppColors.neutral300 : AppColors.neutral700,
                               size: 24,
                             ),
@@ -315,11 +316,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   color: _getCategoryColor(item['category'], isDark),
                                   borderRadius: BorderRadius.circular(14),
                                 ),
-                                child: Icon(
-                                  _getCategoryIcon(item['category']),
-                                  color: _getCategoryIconColor(item['category'], isDark),
-                                  size: 20,
-                                ),
+                                  child: Center(
+                                    child: HugeIcon(
+                                      icon: _getCategoryIcon(item['category']),
+                                      color: _getCategoryIconColor(item['category'], isDark),
+                                      size: 20,
+                                    ),
+                                  ),
                               ),
                               const SizedBox(width: 14),
                               Expanded(
@@ -383,7 +386,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               _buildSectionHeader(context, isDark, 'Upcoming Settle Up'),
               _buildUpcomingSettleUpSection(isDark),
 
-              const SliverPadding(padding: EdgeInsets.only(bottom: 40)),
+              const SliverPadding(padding: EdgeInsets.only(bottom: 120)),
             ],
           ),
         ),
@@ -416,8 +419,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: isDark ? AppColors.neutral300 : AppColors.neutral600,
                 ),
               ),
-              Icon(
-                Icons.people_alt_rounded,
+              HugeIcon(
+                icon: HugeIcons.strokeRoundedUserGroup,
                 color: isDark ? AppColors.neutral400 : AppColors.neutral500,
                 size: 20,
               ),
@@ -503,8 +506,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: isDark ? AppColors.neutral300 : AppColors.neutral600,
                 ),
               ),
-              Icon(
-                Icons.wallet_rounded,
+              HugeIcon(
+                icon: HugeIcons.strokeRoundedWallet02,
                 color: isDark ? AppColors.neutral400 : AppColors.neutral500,
                 size: 20,
               ),
@@ -640,8 +643,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.add_circle_outline_rounded,
+                        HugeIcon(
+                          icon: HugeIcons.strokeRoundedAddCircle,
                           color: isDark ? AppColors.primary400 : AppColors.primary600,
                           size: 24,
                         ),
@@ -739,8 +742,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: isDark ? AppColors.primary900.withValues(alpha: 0.4) : AppColors.primary100,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  Icons.handshake_outlined,
+                child: HugeIcon(
+                  icon: HugeIcons.strokeRoundedAgreement01,
                   color: isDark ? AppColors.primary400 : AppColors.primary600,
                   size: 24,
                 ),

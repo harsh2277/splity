@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_theme_extensions.dart';
 import '../../shared/widgets/index.dart';
 import 'groups_provider.dart';
@@ -40,46 +40,46 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
 
   String _selectedGraphic = 'briefcase';
 
-  final List<Map<String, dynamic>> _presetGraphics = const [
-    {'id': 'briefcase', 'icon': Iconsax.briefcase},
-    {'id': 'home', 'icon': Iconsax.home_2},
-    {'id': 'routing', 'icon': Iconsax.routing},
-    {'id': 'coffee', 'icon': Iconsax.coffee},
-    {'id': 'shopping_bag', 'icon': Iconsax.shopping_bag},
-    {'id': 'car', 'icon': Iconsax.car},
-    {'id': 'game', 'icon': Iconsax.game},
-    {'id': 'wallet_3', 'icon': Iconsax.wallet_3},
+  final List<Map<String, dynamic>> _presetGraphics = [
+    {'id': 'briefcase', 'icon': HugeIcons.strokeRoundedBriefcase01},
+    {'id': 'home', 'icon': HugeIcons.strokeRoundedHome01},
+    {'id': 'routing', 'icon': HugeIcons.strokeRoundedRoute01},
+    {'id': 'coffee', 'icon': HugeIcons.strokeRoundedCoffee01},
+    {'id': 'shopping_bag', 'icon': HugeIcons.strokeRoundedShoppingBag01},
+    {'id': 'car', 'icon': HugeIcons.strokeRoundedCar01},
+    {'id': 'game', 'icon': HugeIcons.strokeRoundedGame},
+    {'id': 'wallet_3', 'icon': HugeIcons.strokeRoundedWallet02},
   ];
 
-  IconData _getPresetIconData(String name) {
+  List<List<dynamic>> _getPresetIconData(String name) {
     switch (name) {
       case 'briefcase':
-        return Iconsax.briefcase;
+        return HugeIcons.strokeRoundedBriefcase01;
       case 'home':
-        return Iconsax.home_2;
+        return HugeIcons.strokeRoundedHome01;
       case 'routing':
-        return Iconsax.routing;
+        return HugeIcons.strokeRoundedRoute01;
       case 'coffee':
-        return Iconsax.coffee;
+        return HugeIcons.strokeRoundedCoffee01;
       case 'shopping_bag':
-        return Iconsax.shopping_bag;
+        return HugeIcons.strokeRoundedShoppingBag01;
       case 'car':
-        return Iconsax.car;
+        return HugeIcons.strokeRoundedCar01;
       case 'game':
-        return Iconsax.game;
+        return HugeIcons.strokeRoundedGame;
       case 'wallet_3':
-        return Iconsax.wallet_3;
+        return HugeIcons.strokeRoundedWallet02;
       default:
-        return Iconsax.element_4;
+        return HugeIcons.strokeRoundedGrid;
     }
   }
   
   // Group types with custom icons (no emojis)
   final List<Map<String, dynamic>> _groupTypes = [
-    {'name': 'Office', 'icon': Iconsax.briefcase},
-    {'name': 'Home', 'icon': Iconsax.home_2},
-    {'name': 'Travel', 'icon': Iconsax.routing},
-    {'name': 'Other', 'icon': Iconsax.element_4},
+    {'name': 'Office', 'icon': HugeIcons.strokeRoundedBriefcase01},
+    {'name': 'Home', 'icon': HugeIcons.strokeRoundedHome01},
+    {'name': 'Travel', 'icon': HugeIcons.strokeRoundedRoute01},
+    {'name': 'Other', 'icon': HugeIcons.strokeRoundedGrid},
   ];
 
   @override
@@ -230,8 +230,8 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                         ),
                         child: _imageFile == null
                             ? Center(
-                                child: Icon(
-                                  _getPresetIconData(_selectedGraphic),
+                                child: HugeIcon(
+                                  icon: _getPresetIconData(_selectedGraphic),
                                   color: Colors.white,
                                   size: 38,
                                 ),
@@ -255,8 +255,8 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Iconsax.camera_copy,
+                        child: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedCamera01,
                           color: Colors.white,
                           size: 14,
                         ),
@@ -382,8 +382,8 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                                 ),
                               ),
                               child: Center(
-                                child: Icon(
-                                  item['icon'] as IconData,
+                                child: HugeIcon(
+                                  icon: item['icon'] as List<List<dynamic>>,
                                   size: 18,
                                   color: isSelected
                                       ? (isDark ? c.primary400 : c.primary600)
@@ -413,7 +413,7 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                         label: 'Group Name',
                         hint: 'e.g. Office Snacks, Lunch Split',
                         errorText: _nameError,
-                        prefixIcon: Iconsax.profile_2user,
+                        prefixIcon: HugeIcons.strokeRoundedUserGroup,
                         textInputAction: TextInputAction.next,
                         enabled: !_isLoading,
                       ),
@@ -424,7 +424,7 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                         controller: _companyController,
                         label: 'Company Name (Optional)',
                         hint: 'e.g. Splity HQ, Floor 4',
-                        prefixIcon: Iconsax.building,
+                        prefixIcon: HugeIcons.strokeRoundedBuilding01,
                         textInputAction: TextInputAction.done,
                         enabled: !_isLoading,
                       ),
@@ -449,7 +449,7 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
                           return AppChip(
                             label: type['name'],
                             isSelected: isSelected,
-                            leadingIcon: type['icon'],
+                            leadingIcon: type['icon'] as List<List<dynamic>>,
                             onTap: _isLoading
                                 ? null
                                 : () {

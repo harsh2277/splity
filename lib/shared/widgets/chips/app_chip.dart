@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme_extensions.dart';
 
@@ -37,7 +38,7 @@ class AppChip extends StatelessWidget {
   final VoidCallback? onTap;
   /// Called when the remove ✕ is tapped (input type only)
   final VoidCallback? onRemove;
-  final IconData? leadingIcon;
+  final List<List<dynamic>>? leadingIcon;
   final Widget? avatar;
 
   @override
@@ -105,10 +106,10 @@ class AppChip extends StatelessWidget {
               ),
               const SizedBox(width: 6),
             ] else if (leadingIcon != null) ...[
-              Icon(leadingIcon, size: iconSize, color: fg),
+              HugeIcon(icon: leadingIcon!, size: iconSize, color: fg),
               const SizedBox(width: 4),
             ] else if (isSelected && type == AppChipType.filter) ...[
-              Icon(Icons.check_rounded, size: iconSize, color: fg),
+              HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle02, size: iconSize, color: fg),
               const SizedBox(width: 4),
             ],
             Text(
@@ -123,8 +124,8 @@ class AppChip extends StatelessWidget {
               const SizedBox(width: 4),
               GestureDetector(
                 onTap: isDisabled ? null : onRemove,
-                child: Icon(
-                  Icons.close_rounded,
+                child: HugeIcon(
+                  icon: HugeIcons.strokeRoundedCancel01,
                   size: iconSize,
                   color: fg.withValues(alpha: 0.7),
                 ),

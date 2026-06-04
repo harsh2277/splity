@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 
 class PersonalTrackerScreen extends StatelessWidget {
@@ -15,8 +16,8 @@ class PersonalTrackerScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.account_balance_wallet_outlined,
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedWallet02,
               size: 64,
               color: isDark ? AppColors.neutral600 : AppColors.neutral300,
             ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_theme_extensions.dart';
 import '../../shared/widgets/index.dart';
 
@@ -115,8 +116,8 @@ class _OtpScreenState extends State<OtpScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.arrow_back_rounded,
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedArrowLeft01,
                   color: isDark ? c.neutral50 : c.neutral900,
                   size: 20,
                 ),

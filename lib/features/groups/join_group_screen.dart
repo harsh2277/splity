@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_theme_extensions.dart';
 import '../../shared/widgets/index.dart';
 import 'groups_provider.dart';
@@ -145,8 +145,8 @@ class _JoinGroupScreenState extends ConsumerState<JoinGroupScreen> with SingleTi
                       shape: BoxShape.circle,
                       border: Border.all(color: isDark ? c.surface3 : c.neutral200),
                     ),
-                    child: Icon(
-                      Iconsax.key,
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedKey01,
                       size: 40,
                       color: isDark ? c.primary400 : c.primary600,
                     ),
@@ -176,7 +176,7 @@ class _JoinGroupScreenState extends ConsumerState<JoinGroupScreen> with SingleTi
                     label: 'Invite Code',
                     hint: 'e.g. CHAI24',
                     errorText: _codeError,
-                    prefixIcon: Iconsax.link_1,
+                    prefixIcon: HugeIcons.strokeRoundedLink01,
                     textInputAction: TextInputAction.done,
                     enabled: !_isLoading,
                     onSubmitted: _submitCode,
@@ -282,7 +282,7 @@ class _JoinGroupScreenState extends ConsumerState<JoinGroupScreen> with SingleTi
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Iconsax.scan, color: isDark ? c.primary400 : c.primary600, size: 20),
+                          HugeIcon(icon: HugeIcons.strokeRoundedQrCode, color: isDark ? c.primary400 : c.primary600, size: 20),
                           const SizedBox(width: 8),
                           Text(
                             'Align Group QR inside the Box',

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme_extensions.dart';
 
@@ -30,29 +31,29 @@ class AppSnackbar {
     final Color bg;
     final Color fg;
     final Color iconColor;
-    final IconData icon;
+    final List<List<dynamic>> icon;
 
     switch (type) {
       case AppSnackbarType.success:
         bg = isDark ? colors.success900 : colors.success600;
         fg = Colors.white;
         iconColor = Colors.white;
-        icon = Icons.check_circle_outline_rounded;
+        icon = HugeIcons.strokeRoundedCheckmarkCircle02;
       case AppSnackbarType.error:
         bg = isDark ? colors.error800 : colors.error600;
         fg = Colors.white;
         iconColor = Colors.white;
-        icon = Icons.error_outline_rounded;
+        icon = HugeIcons.strokeRoundedAlertCircle;
       case AppSnackbarType.warning:
         bg = isDark ? colors.warning800 : colors.warning500;
         fg = Colors.white;
         iconColor = Colors.white;
-        icon = Icons.warning_amber_rounded;
+        icon = HugeIcons.strokeRoundedAlert01;
       case AppSnackbarType.info:
         bg = isDark ? colors.neutral800 : colors.neutral900;
         fg = colors.neutral50;
         iconColor = colors.primary400;
-        icon = Icons.info_outline_rounded;
+        icon = HugeIcons.strokeRoundedInformationCircle;
     }
 
     final double statusBarHeight = MediaQuery.of(context).padding.top;
@@ -80,7 +81,7 @@ class AppSnackbar {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           content: Row(
             children: [
-              Icon(icon, size: 20, color: iconColor),
+              HugeIcon(icon: icon, size: 20, color: iconColor),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(

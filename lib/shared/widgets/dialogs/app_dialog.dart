@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../core/theme/app_theme_extensions.dart';
 import '../buttons/app_button.dart';
 
@@ -27,7 +28,7 @@ class AppDialog extends StatelessWidget {
   });
 
   final AppDialogType type;
-  final IconData? icon;
+  final List<List<dynamic>>? icon;
   final String title;
   final String? message;
   final Widget? content;
@@ -105,25 +106,25 @@ class AppDialog extends StatelessWidget {
     final isDark = context.isDark;
 
     // ── Icon & color ────────────────────────────────────────
-    final IconData resolvedIcon;
+    final List<List<dynamic>> resolvedIcon;
     final Color iconColor;
     final Color iconBg;
 
     switch (type) {
       case AppDialogType.confirm:
-        resolvedIcon = icon ?? Icons.help_outline_rounded;
+        resolvedIcon = icon ?? HugeIcons.strokeRoundedHelpCircle;
         iconColor = isDark ? c.primary400 : c.primary600;
         iconBg = isDark ? c.primary900.withValues(alpha: 0.5) : c.primary100;
       case AppDialogType.info:
-        resolvedIcon = icon ?? Icons.info_outline_rounded;
+        resolvedIcon = icon ?? HugeIcons.strokeRoundedInformationCircle;
         iconColor = isDark ? c.info400 : c.info600;
         iconBg = isDark ? c.info900.withValues(alpha: 0.5) : c.info100;
       case AppDialogType.destructive:
-        resolvedIcon = icon ?? Icons.warning_amber_rounded;
+        resolvedIcon = icon ?? HugeIcons.strokeRoundedAlert01;
         iconColor = isDark ? c.error400 : c.error600;
         iconBg = isDark ? c.error900.withValues(alpha: 0.5) : c.error100;
       case AppDialogType.custom:
-        resolvedIcon = icon ?? Icons.widgets_outlined;
+        resolvedIcon = icon ?? HugeIcons.strokeRoundedGrid;
         iconColor = isDark ? c.primary400 : c.primary600;
         iconBg = isDark ? c.primary900.withValues(alpha: 0.5) : c.primary100;
     }
@@ -150,7 +151,9 @@ class AppDialog extends StatelessWidget {
                   color: iconBg,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(resolvedIcon, color: iconColor, size: 26),
+                child: Center(
+                  child: HugeIcon(icon: resolvedIcon, color: iconColor, size: 26),
+                ),
               ),
             ),
             const SizedBox(height: 16),

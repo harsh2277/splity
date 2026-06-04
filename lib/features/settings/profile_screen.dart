@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -100,8 +101,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 color: isDark ? AppColors.primary400 : AppColors.primary600,
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(
-                                Icons.camera_alt,
+                              child: const HugeIcon(
+                                icon: HugeIcons.strokeRoundedCamera01,
                                 size: 16,
                                 color: Colors.white,
                               ),
@@ -161,8 +162,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           color: isDark ? AppColors.success900.withValues(alpha: 0.4) : AppColors.success100,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(
-                          Icons.qr_code_2,
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedQrCode,
                           color: isDark ? AppColors.success400 : AppColors.success600,
                           size: 24,
                         ),
@@ -201,7 +202,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         ),
                                       ),
                                       IconButton(
-                                        icon: const Icon(Icons.check, color: AppColors.success500, size: 20),
+                                        icon: const HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle02, color: AppColors.success500, size: 20),
                                         onPressed: () {
                                           setState(() {
                                             _upiId = _upiController.text;
@@ -224,8 +225,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       if (!_isEditingUpi)
                         IconButton(
-                          icon: Icon(
-                            Icons.edit_outlined,
+                          icon: HugeIcon(
+                            icon: HugeIcons.strokeRoundedPencilEdit01,
                             color: isDark ? AppColors.neutral400 : AppColors.neutral500,
                             size: 20,
                           ),
@@ -263,17 +264,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Column(
                     children: [
                       _buildSettingItem(
-                        icon: Icons.notifications_none_outlined,
+                        icon: HugeIcons.strokeRoundedNotification01,
                         iconColor: isDark ? AppColors.primary400 : AppColors.primary600,
                         title: 'Notifications',
                         subtitle: 'Push notifications & reminders',
-                        trailing: const Icon(Icons.chevron_right, size: 20),
+                        trailing: const HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, size: 20),
                         onTap: () {},
                         isDark: isDark,
                       ),
                       _buildDivider(isDark),
                       _buildSettingItem(
-                        icon: Icons.dark_mode_outlined,
+                        icon: HugeIcons.strokeRoundedMoon02,
                         iconColor: isDark ? AppColors.info400 : AppColors.info600,
                         title: 'Dark Mode',
                         subtitle: 'Toggle app theme',
@@ -289,38 +290,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       _buildDivider(isDark),
                       _buildSettingItem(
-                        icon: Icons.security_outlined,
+                        icon: HugeIcons.strokeRoundedShield01,
                         iconColor: isDark ? AppColors.warning400 : AppColors.warning600,
                         title: 'App Lock & Security',
                         subtitle: 'Biometric authorization',
-                        trailing: const Icon(Icons.chevron_right, size: 20),
+                        trailing: const HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, size: 20),
                         onTap: () {},
                         isDark: isDark,
                       ),
                       _buildDivider(isDark),
                       _buildSettingItem(
-                        icon: Icons.help_outline_rounded,
+                        icon: HugeIcons.strokeRoundedHelpCircle,
                         iconColor: isDark ? AppColors.neutral400 : AppColors.neutral600,
                         title: 'Help & Support',
                         subtitle: 'FAQs, contact us, guidebooks',
-                        trailing: const Icon(Icons.chevron_right, size: 20),
+                        trailing: const HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, size: 20),
                         onTap: () {},
                         isDark: isDark,
                       ),
                       _buildDivider(isDark),
                       _buildSettingItem(
-                        icon: Icons.logout_rounded,
+                        icon: HugeIcons.strokeRoundedLogout01,
                         iconColor: AppColors.error500,
                         title: 'Logout',
                         subtitle: 'Sign out of your account',
-                        trailing: const Icon(Icons.chevron_right, size: 20),
+                        trailing: const HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, size: 20),
                         onTap: () {},
                         isDark: isDark,
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 120),
               ],
             ),
           ),
@@ -330,7 +331,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildSettingItem({
-    required IconData icon,
+    required List<List<dynamic>> icon,
     required Color iconColor,
     required String title,
     required String subtitle,
@@ -351,7 +352,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 color: iconColor.withValues(alpha: isDark ? 0.2 : 0.08),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(icon, color: iconColor, size: 22),
+              child: HugeIcon(icon: icon, color: iconColor, size: 22),
             ),
             const SizedBox(width: 16),
             Expanded(

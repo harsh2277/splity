@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_theme_extensions.dart';
 import '../../core/constants/app_constants.dart';
 import '../../shared/widgets/index.dart';
@@ -80,8 +81,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     color: isDark ? c.surface3 : c.neutral200,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    Icons.account_balance_wallet_rounded,
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedWallet02,
                     color: isDark ? c.primary400 : c.primary600,
                     size: 24,
                   ),

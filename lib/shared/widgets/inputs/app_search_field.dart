@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme_extensions.dart';
 
@@ -82,8 +82,8 @@ class _AppSearchFieldState extends State<AppSearchField> {
       child: Row(
         children: [
           const SizedBox(width: 14),
-          Icon(
-            Icons.search_rounded,
+          HugeIcon(
+            icon: HugeIcons.strokeRoundedSearch01,
             size: AppConstants.iconMd,
             color: _isFocused
                 ? (isDark ? c.primary400 : c.primary600)
@@ -130,8 +130,8 @@ class _AppSearchFieldState extends State<AppSearchField> {
                     shape: BoxShape.circle,
                     color: isDark ? c.neutral600 : c.neutral300,
                   ),
-                  child: Icon(
-                    Iconsax.close_circle,
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedCancel01,
                     size: 14,
                     color: isDark ? c.neutral200 : c.neutral700,
                   ),

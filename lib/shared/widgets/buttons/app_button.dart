@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme_extensions.dart';
 
@@ -34,8 +35,8 @@ class AppButton extends StatelessWidget {
   final AppButtonSize size;
   final bool isLoading;
   final bool isFullWidth;
-  final IconData? leadingIcon;
-  final IconData? trailingIcon;
+  final List<List<dynamic>>? leadingIcon;
+  final List<List<dynamic>>? trailingIcon;
   final bool hasShadow;
 
   bool get _disabled => onPressed == null && !isLoading;
@@ -121,7 +122,7 @@ class AppButton extends StatelessWidget {
           ),
           const SizedBox(width: 8),
         ] else if (leadingIcon != null) ...[
-          Icon(leadingIcon, size: _iconSize, color: fg),
+          HugeIcon(icon: leadingIcon!, size: _iconSize, color: fg),
           const SizedBox(width: 6),
         ],
         Text(
@@ -136,7 +137,7 @@ class AppButton extends StatelessWidget {
         ),
         if (trailingIcon != null && !isLoading) ...[
           const SizedBox(width: 6),
-          Icon(trailingIcon, size: _iconSize, color: fg),
+          HugeIcon(icon: trailingIcon!, size: _iconSize, color: fg),
         ],
       ],
     );

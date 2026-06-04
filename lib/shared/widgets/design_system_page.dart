@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:splity/core/theme/index.dart';
 import 'package:splity/core/constants/app_constants.dart';
 import 'package:splity/shared/widgets/index.dart';
@@ -44,22 +44,22 @@ class _DesignSystemPageState extends State<DesignSystemPage> {
     super.dispose();
   }
 
-  IconData _getSectionIcon(String section) {
+  List<List<dynamic>> _getSectionIcon(String section) {
     switch (section) {
       case 'All':
-        return Iconsax.grid_1;
+        return HugeIcons.strokeRoundedGrid;
       case 'Tokens':
-        return Iconsax.colorfilter;
+        return HugeIcons.strokeRoundedColors;
       case 'Buttons':
-        return Iconsax.category;
+        return HugeIcons.strokeRoundedDashboardSquare01;
       case 'Input Layouts':
-        return Iconsax.textalign_left;
+        return HugeIcons.strokeRoundedTextAlignLeft;
       case 'Pill Tags & Avatars':
-        return Iconsax.profile_2user;
+        return HugeIcons.strokeRoundedUserGroup;
       case 'Modals & Alerts':
-        return Iconsax.notification;
+        return HugeIcons.strokeRoundedNotification01;
       default:
-        return Iconsax.element_4;
+        return HugeIcons.strokeRoundedGrid;
     }
   }
 
@@ -203,8 +203,8 @@ class _DesignSystemPageState extends State<DesignSystemPage> {
                   children: [
                     AppButton(label: 'Saving Ledger...', isLoading: true, onPressed: () {}),
                     AppButton(label: 'Disabled state', onPressed: null),
-                    AppButton(label: 'Add Expense', leadingIcon: Iconsax.add, onPressed: () {}),
-                    AppButton(label: 'Next screen', trailingIcon: Iconsax.arrow_right_3, onPressed: () {}),
+                    AppButton(label: 'Add Expense', leadingIcon: HugeIcons.strokeRoundedAdd01, onPressed: () {}),
+                    AppButton(label: 'Next screen', trailingIcon: HugeIcons.strokeRoundedArrowRight01, onPressed: () {}),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -216,11 +216,11 @@ class _DesignSystemPageState extends State<DesignSystemPage> {
                   runSpacing: 16,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    AppIconButton(icon: Iconsax.notification, onPressed: () {}),
-                    AppIconButton(icon: Iconsax.edit, variant: AppIconButtonVariant.outlined, onPressed: () {}),
-                    AppIconButton(icon: Iconsax.trash, variant: AppIconButtonVariant.ghost, isDanger: true, onPressed: () {}),
-                    AppIconButton(icon: Iconsax.share, size: AppIconButtonSize.sm, onPressed: () {}),
-                    AppIconButton(icon: Iconsax.send_1, size: AppIconButtonSize.lg, onPressed: () {}),
+                    AppIconButton(icon: HugeIcons.strokeRoundedNotification01, onPressed: () {}),
+                    AppIconButton(icon: HugeIcons.strokeRoundedEdit02, variant: AppIconButtonVariant.outlined, onPressed: () {}),
+                    AppIconButton(icon: HugeIcons.strokeRoundedDelete02, variant: AppIconButtonVariant.ghost, isDanger: true, onPressed: () {}),
+                    AppIconButton(icon: HugeIcons.strokeRoundedShare01, size: AppIconButtonSize.sm, onPressed: () {}),
+                    AppIconButton(icon: HugeIcons.strokeRoundedSent, size: AppIconButtonSize.lg, onPressed: () {}),
                   ],
                 ),
               ],
@@ -246,16 +246,16 @@ class _DesignSystemPageState extends State<DesignSystemPage> {
                     ? Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(child: _buildInputDemoCard(c, 'DEFAULT EMPTY STATE', const AppTextField(label: 'Merchant Name', hint: 'e.g. Starbucks, Uber, Walmart', prefixIcon: Iconsax.shop))),
+                          Expanded(child: _buildInputDemoCard(c, 'DEFAULT EMPTY STATE', AppTextField(label: 'Merchant Name', hint: 'e.g. Starbucks, Uber, Walmart', prefixIcon: HugeIcons.strokeRoundedStore01))),
                           const SizedBox(width: 16),
-                          Expanded(child: _buildInputDemoCard(c, 'INPUT SUFFIX CLEAR (TYPE TO CLEAR)', AppTextField(controller: _demoController1, label: 'Ledger Description', hint: 'Enter description', prefixIcon: Iconsax.document_text_1))),
+                          Expanded(child: _buildInputDemoCard(c, 'INPUT SUFFIX CLEAR (TYPE TO CLEAR)', AppTextField(controller: _demoController1, label: 'Ledger Description', hint: 'Enter description', prefixIcon: HugeIcons.strokeRoundedNote01))),
                         ],
                       )
                     : Column(
                         children: [
-                          _buildInputDemoCard(c, 'DEFAULT EMPTY STATE', const AppTextField(label: 'Merchant Name', hint: 'e.g. Starbucks, Uber, Walmart', prefixIcon: Iconsax.shop)),
+                          _buildInputDemoCard(c, 'DEFAULT EMPTY STATE', AppTextField(label: 'Merchant Name', hint: 'e.g. Starbucks, Uber, Walmart', prefixIcon: HugeIcons.strokeRoundedStore01)),
                           const SizedBox(height: 16),
-                          _buildInputDemoCard(c, 'INPUT SUFFIX CLEAR (TYPE TO CLEAR)', AppTextField(controller: _demoController1, label: 'Ledger Description', hint: 'Enter description', prefixIcon: Iconsax.document_text_1)),
+                          _buildInputDemoCard(c, 'INPUT SUFFIX CLEAR (TYPE TO CLEAR)', AppTextField(controller: _demoController1, label: 'Ledger Description', hint: 'Enter description', prefixIcon: HugeIcons.strokeRoundedNote01)),
                         ],
                       ),
                 const SizedBox(height: 16),
@@ -265,16 +265,16 @@ class _DesignSystemPageState extends State<DesignSystemPage> {
                     ? Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(child: _buildInputDemoCard(c, 'SECURE PIN INPUT (EYE TOGGLE)', const AppTextField(label: 'Security Transaction PIN', hint: 'Enter 6-digit PIN', prefixIcon: Iconsax.security_card, isPassword: true))),
+                          Expanded(child: _buildInputDemoCard(c, 'SECURE PIN INPUT (EYE TOGGLE)', AppTextField(label: 'Security Transaction PIN', hint: 'Enter 6-digit PIN', prefixIcon: HugeIcons.strokeRoundedSecurity, isPassword: true))),
                           const SizedBox(width: 16),
-                          Expanded(child: _buildInputDemoCard(c, 'VALIDATION ERROR & FOCUS OUTLINE', const AppTextField(label: 'Split Ratio Percentage', hint: 'e.g. 50%', prefixIcon: Iconsax.info_circle, errorText: 'Value must not exceed 100%'))),
+                          Expanded(child: _buildInputDemoCard(c, 'VALIDATION ERROR & FOCUS OUTLINE', AppTextField(label: 'Split Ratio Percentage', hint: 'e.g. 50%', prefixIcon: HugeIcons.strokeRoundedInformationCircle, errorText: 'Value must not exceed 100%'))),
                         ],
                       )
                     : Column(
                         children: [
-                          _buildInputDemoCard(c, 'SECURE PIN INPUT (EYE TOGGLE)', const AppTextField(label: 'Security Transaction PIN', hint: 'Enter 6-digit PIN', prefixIcon: Iconsax.security_card, isPassword: true)),
+                          _buildInputDemoCard(c, 'SECURE PIN INPUT (EYE TOGGLE)', AppTextField(label: 'Security Transaction PIN', hint: 'Enter 6-digit PIN', prefixIcon: HugeIcons.strokeRoundedSecurity, isPassword: true)),
                           const SizedBox(height: 16),
-                          _buildInputDemoCard(c, 'VALIDATION ERROR & FOCUS OUTLINE', const AppTextField(label: 'Split Ratio Percentage', hint: 'e.g. 50%', prefixIcon: Iconsax.info_circle, errorText: 'Value must not exceed 100%')),
+                          _buildInputDemoCard(c, 'VALIDATION ERROR & FOCUS OUTLINE', AppTextField(label: 'Split Ratio Percentage', hint: 'e.g. 50%', prefixIcon: HugeIcons.strokeRoundedInformationCircle, errorText: 'Value must not exceed 100%')),
                         ],
                       ),
                 const SizedBox(height: 16),
@@ -286,14 +286,14 @@ class _DesignSystemPageState extends State<DesignSystemPage> {
                         children: [
                           Expanded(child: _buildInputDemoCard(c, 'Pill Search Field', AppSearchField(controller: _searchController, hint: 'Search transaction categories...'))),
                           const SizedBox(width: 16),
-                          Expanded(child: _buildInputDemoCard(c, 'CHARACTER COUNTER (FOCUSED)', const AppTextField(label: 'Group Tagline Memo', hint: 'Brief statement', prefixIcon: Iconsax.message_text, maxLength: 30))),
+                          Expanded(child: _buildInputDemoCard(c, 'CHARACTER COUNTER (FOCUSED)', AppTextField(label: 'Group Tagline Memo', hint: 'Brief statement', prefixIcon: HugeIcons.strokeRoundedMessage01, maxLength: 30))),
                         ],
                       )
                     : Column(
                         children: [
                           _buildInputDemoCard(c, 'Pill Search Field', AppSearchField(controller: _searchController, hint: 'Search transaction categories...')),
                           const SizedBox(height: 16),
-                          _buildInputDemoCard(c, 'CHARACTER COUNTER (FOCUSED)', const AppTextField(label: 'Group Tagline Memo', hint: 'Brief statement', prefixIcon: Iconsax.message_text, maxLength: 30)),
+                          _buildInputDemoCard(c, 'CHARACTER COUNTER (FOCUSED)', AppTextField(label: 'Group Tagline Memo', hint: 'Brief statement', prefixIcon: HugeIcons.strokeRoundedMessage01, maxLength: 30)),
                         ],
                       ),
               ],
@@ -503,9 +503,9 @@ class _DesignSystemPageState extends State<DesignSystemPage> {
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
                       child: Column(
                         children: [
-                          _buildCategoryItem(Iconsax.activity, 'Restaurants & Meals', 'Group lunches, cafes, dinner tickets'),
-                          _buildCategoryItem(Iconsax.bus, 'Flights & Transit', 'Taxis, buses, trains, fuel split'),
-                          _buildCategoryItem(Iconsax.home, 'Rents & Utilities', 'Apartment rental bill, electricity, fiber wifi'),
+                          _buildCategoryItem(HugeIcons.strokeRoundedActivity01, 'Restaurants & Meals', 'Group lunches, cafes, dinner tickets'),
+                          _buildCategoryItem(HugeIcons.strokeRoundedBus01, 'Flights & Transit', 'Taxis, buses, trains, fuel split'),
+                          _buildCategoryItem(HugeIcons.strokeRoundedHome01, 'Rents & Utilities', 'Apartment rental bill, electricity, fiber wifi'),
                           const SizedBox(height: 16),
                           AppButton(
                             label: 'Save & Close Selection',
@@ -561,7 +561,7 @@ class _DesignSystemPageState extends State<DesignSystemPage> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Iconsax.receipt_2, color: c.primary, size: 22),
+            HugeIcon(icon: HugeIcons.strokeRoundedReceiptText, color: c.primary, size: 22),
             const SizedBox(width: 8),
             Text(
               'splity design system',
@@ -578,8 +578,8 @@ class _DesignSystemPageState extends State<DesignSystemPage> {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(
-              isDark ? Iconsax.sun_1 : Iconsax.moon,
+            icon: HugeIcon(
+              icon: isDark ? HugeIcons.strokeRoundedSun01 : HugeIcons.strokeRoundedMoon,
               color: c.textPrimary,
             ),
             onPressed: () {
@@ -663,8 +663,8 @@ class _DesignSystemPageState extends State<DesignSystemPage> {
                                     ),
                                     child: Row(
                                       children: [
-                                        Icon(
-                                          _getSectionIcon(section),
+                                        HugeIcon(
+                                          icon: _getSectionIcon(section),
                                           size: 18,
                                           color: isSelected ? c.primary : c.textSecondary,
                                         ),
@@ -851,8 +851,8 @@ class _DesignSystemPageState extends State<DesignSystemPage> {
               color: c.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              Iconsax.receipt_2,
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedReceiptText,
               color: c.primary,
               size: 32,
             ),
@@ -989,7 +989,7 @@ class _DesignSystemPageState extends State<DesignSystemPage> {
     );
   }
 
-  Widget _buildCategoryItem(IconData icon, String name, String subtitle) {
+  Widget _buildCategoryItem(List<List<dynamic>> icon, String name, String subtitle) {
     final c = context.appColors;
     return InkWell(
       onTap: () {},
@@ -1004,7 +1004,7 @@ class _DesignSystemPageState extends State<DesignSystemPage> {
                 color: c.primary50,
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: c.primary, size: 20),
+              child: HugeIcon(icon: icon, color: c.primary, size: 20),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -1030,7 +1030,7 @@ class _DesignSystemPageState extends State<DesignSystemPage> {
                 ],
               ),
             ),
-            Icon(Iconsax.arrow_right_3, color: c.textSecondary, size: 18),
+            HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, color: c.textSecondary, size: 18),
           ],
         ),
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_theme_extensions.dart';
 import '../../core/constants/app_constants.dart';
 
@@ -84,8 +85,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     ],
                   ),
                   child: const Center(
-                    child: Icon(
-                      Icons.account_balance_wallet_rounded,
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedWallet02,
                       color: Colors.white,
                       size: 44,
                     ),
