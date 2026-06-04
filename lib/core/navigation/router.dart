@@ -7,6 +7,7 @@ import '../../features/home/navigation_shell.dart';
 import '../../features/groups/create_group_screen.dart';
 import '../../features/groups/join_group_screen.dart';
 import '../../features/groups/group_details_screen.dart';
+import '../../features/expenses/add_expense_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -46,7 +47,10 @@ final GoRouter appRouter = GoRouter(
         return GroupDetailsScreen(groupId: id);
       },
     ),
-
+    GoRoute(
+      path: '/add-expense',
+      builder: (context, state) => const AddExpenseScreen(),
+    ),
   ],
 );
 

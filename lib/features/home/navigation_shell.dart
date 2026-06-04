@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../expenses/dashboard_screen.dart';
 import '../groups/groups_list_screen.dart';
@@ -142,7 +143,7 @@ class _NavigationShellState extends State<NavigationShell> {
       onTapUp: (_) => setState(() => _isAddPressed = false),
       onTapCancel: () => setState(() => _isAddPressed = false),
       onTap: () {
-        // Trigger Add Expense action
+        context.push('/add-expense');
       },
       child: AnimatedScale(
         duration: const Duration(milliseconds: 150),

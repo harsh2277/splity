@@ -1,67 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
+import 'expenses_provider.dart';
 
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   final PageController _cardPageController = PageController();
   int _currentCardIndex = 0;
-
-  // Mock data for recent activities
-  final List<Map<String, dynamic>> _activities = [
-    {
-      'title': 'Chai & Samosa',
-      'subtitle': 'Office Chai Group • Paid by Aman',
-      'amount': '₹45.00',
-      'isOwed': true,
-      'isPersonal': false,
-      'category': 'food',
-      'date': 'Today, 4:30 PM',
-    },
-    {
-      'title': 'Uber ride to Client Office',
-      'subtitle': 'Personal Log',
-      'amount': '₹240.00',
-      'isOwed': false,
-      'isPersonal': true,
-      'category': 'travel',
-      'date': 'Today, 2:15 PM',
-    },
-    {
-      'title': 'Team Lunch (Pizza)',
-      'subtitle': 'Paid by You • Split equally',
-      'amount': '₹1,250.00',
-      'isOwed': false,
-      'isPersonal': false,
-      'category': 'food',
-      'date': 'Yesterday, 1:10 PM',
-    },
-    {
-      'title': 'Monthly Internet subscription',
-      'subtitle': 'Personal Log',
-      'amount': '₹799.00',
-      'isOwed': false,
-      'isPersonal': true,
-      'category': 'bills',
-      'date': '1 Jun 2026',
-    },
-    {
-      'title': 'Printouts & Stationery',
-      'subtitle': 'Office Admin • Paid by Rohit',
-      'amount': '₹120.00',
-      'isOwed': true,
-      'isPersonal': false,
-      'category': 'other',
-      'date': '30 May 2026',
-    },
-  ];
 
   @override
   void initState() {
@@ -116,6 +69,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activities = ref.watch(expensesProvider);
 
     return SafeArea(
       bottom: false,
@@ -282,16 +236,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       shrinkWrap: true,
                       padding: const EdgeInsets.all(8),
                       physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _activities.length,
+                      itemCount: activities.length,
                       separatorBuilder: (context, index) => Divider(
                         height: 1,
                         thickness: 1,
                         color: isDark ? AppColors.darkSurface2 : AppColors.neutral100,
                       ),
                       itemBuilder: (context, index) {
-                        final item = _activities[index];
-                        final isPersonal = item['isPersonal'];
-                        final isOwed = item['isOwed'];
+                        final item = activities[index];
+                        final isPersonal = item.isPersonal;
+                        final isOwed = item.isOwed;
                         
                         Color amountColor;
                         String prefix = '';
@@ -313,13 +267,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 width: 44,
                                 height: 44,
                                 decoration: BoxDecoration(
-                                  color: _getCategoryColor(item['category'], isDark),
+                                  color: _getCategoryColor(item.category, isDark),
                                   borderRadius: BorderRadius.circular(14),
                                 ),
                                   child: Center(
                                     child: HugeIcon(
-                                      icon: _getCategoryIcon(item['category']),
-                                      color: _getCategoryIconColor(item['category'], isDark),
+                                      icon: _getCategoryIcon(item.category),
+                                      color: _getCategoryIconColor(item.category, isDark),
                                       size: 20,
                                     ),
                                   ),
@@ -330,7 +284,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      item['title'],
+                                      item.title,
                                       style: GoogleFonts.plusJakartaSans(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
@@ -341,7 +295,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      item['subtitle'],
+                                      item.subtitle,
                                       style: GoogleFonts.plusJakartaSans(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w500,
@@ -356,7 +310,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
-                                    '$prefix${item['amount']}',
+                                    '$prefix${item.amount}',
                                     style: GoogleFonts.plusJakartaSans(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w700,
@@ -365,7 +319,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    item['date'],
+                                    item.date,
                                     style: GoogleFonts.plusJakartaSans(
                                       fontSize: 10,
                                       color: isDark ? AppColors.neutral600 : AppColors.neutral400,
