@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../expenses/dashboard_screen.dart';
 import '../groups/groups_list_screen.dart';
-import '../personal/personal_tracker_screen.dart';
+import '../members/members_screen.dart';
 import '../settings/profile_screen.dart';
 
 class NavigationShell extends StatefulWidget {
@@ -23,7 +23,7 @@ class _NavigationShellState extends State<NavigationShell> {
   final List<Widget> _screens = const [
     DashboardScreen(),
     GroupsListScreen(),
-    PersonalTrackerScreen(),
+    MembersScreen(),
     ProfileScreen(),
   ];
 
@@ -65,7 +65,7 @@ class _NavigationShellState extends State<NavigationShell> {
                     _buildNavItem(0, HugeIcons.strokeRoundedHome01, HugeIcons.strokeRoundedHome01, 'Home', activeColor, isDark),
                     _buildNavItem(1, HugeIcons.strokeRoundedUserGroup, HugeIcons.strokeRoundedUserGroup, 'Groups', activeColor, isDark),
                     const SizedBox(width: 90), // Precise space reservation for 68px notched FAB
-                    _buildNavItem(2, HugeIcons.strokeRoundedUser, HugeIcons.strokeRoundedUser, 'Member', activeColor, isDark),
+                    _buildNavItem(2, HugeIcons.strokeRoundedUser, HugeIcons.strokeRoundedUser, 'Members', activeColor, isDark),
                     _buildNavItem(3, HugeIcons.strokeRoundedMoreHorizontal, HugeIcons.strokeRoundedMoreHorizontal, 'More', activeColor, isDark),
                   ],
                 ),

@@ -109,7 +109,7 @@ class _AppTextFieldState extends State<AppTextField> {
     }
 
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(AppConstants.radiusFull),
+      borderRadius: BorderRadius.circular(widget.isMultiline ? 20.0 : AppConstants.radiusFull),
       borderSide: BorderSide.none,
     );
 
@@ -154,7 +154,7 @@ class _AppTextFieldState extends State<AppTextField> {
         AnimatedContainer(
           duration: AppConstants.durationFast,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppConstants.radiusFull),
+            borderRadius: BorderRadius.circular(widget.isMultiline ? 20.0 : AppConstants.radiusFull),
             color: !widget.enabled
                 ? (isDark ? c.surface3 : c.neutral200)
                 : (isDark ? c.surface3 : c.neutral200),
@@ -164,81 +164,153 @@ class _AppTextFieldState extends State<AppTextField> {
             ),
             boxShadow: null,
           ),
-          child: TextField(
-            controller: _controller,
-            focusNode: _focusNode,
-            enabled: widget.enabled,
-            readOnly: widget.readOnly,
-            obscureText: widget.isPassword && _obscureText,
-            maxLines: widget.isPassword
-                ? 1
-                : (widget.isMultiline ? (widget.maxLines ?? 5) : 1),
-            minLines: widget.isMultiline ? (widget.minLines ?? 3) : null,
-            keyboardType: widget.keyboardType ??
-                (widget.isMultiline ? TextInputType.multiline : null),
-            textInputAction: widget.textInputAction,
-            onChanged: (val) {
-              widget.onChanged?.call(val);
-            },
-            onSubmitted: widget.onSubmitted,
-            onTap: widget.onTap,
-            autofocus: widget.autofocus,
-            maxLength: widget.maxLength,
-            inputFormatters: widget.inputFormatters,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: widget.enabled
-                  ? (isDark ? c.neutral50 : c.neutral900)
-                  : c.textDisabled,
-            ),
-            decoration: InputDecoration(
-              hintText: widget.hint,
-              hintStyle: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: isDark ? c.neutral600 : c.neutral400,
-              ),
-              filled: false,
-              prefixIcon: widget.prefixIcon != null
-                  ? TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 1.0, end: _isFocused ? 1.15 : 1.0),
-                      duration: AppConstants.durationFast,
-                      builder: (context, scale, child) {
-                        return Transform.scale(
-                          scale: scale,
-                          child: child,
-                        );
-                      },
-                      child: Center(
-                        widthFactor: 1.0,
-                        heightFactor: 1.0,
-                        child: HugeIcon(
-                          icon: widget.prefixIcon!,
-                          size: AppConstants.iconMd,
-                          color: _isFocused
-                              ? (isDark ? c.primary400 : c.primary600)
-                              : (isDark ? c.neutral400 : c.neutral500),
+          child: widget.isMultiline && widget.prefixIcon != null
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 16.0, top: 13.0),
+                      child: HugeIcon(
+                        icon: widget.prefixIcon!,
+                        size: AppConstants.iconMd,
+                        color: _isFocused
+                            ? (isDark ? c.primary400 : c.primary600)
+                            : (isDark ? c.neutral400 : c.neutral500),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextField(
+                        controller: _controller,
+                        focusNode: _focusNode,
+                        enabled: widget.enabled,
+                        readOnly: widget.readOnly,
+                        obscureText: widget.isPassword && _obscureText,
+                        maxLines: widget.maxLines ?? 5,
+                        minLines: widget.minLines ?? 3,
+                        keyboardType: widget.keyboardType ?? TextInputType.multiline,
+                        textInputAction: widget.textInputAction,
+                        onChanged: (val) {
+                          widget.onChanged?.call(val);
+                        },
+                        onSubmitted: widget.onSubmitted,
+                        onTap: widget.onTap,
+                        autofocus: widget.autofocus,
+                        maxLength: widget.maxLength,
+                        inputFormatters: widget.inputFormatters,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: widget.enabled
+                              ? (isDark ? c.neutral50 : c.neutral900)
+                              : c.textDisabled,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: widget.hint,
+                          hintStyle: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            color: isDark ? c.neutral600 : c.neutral400,
+                          ),
+                          filled: false,
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          errorBorder: InputBorder.none,
+                          focusedErrorBorder: InputBorder.none,
+                          disabledBorder: InputBorder.none,
+                          contentPadding: const EdgeInsets.only(
+                            right: 18,
+                            top: 16,
+                            bottom: 16,
+                          ),
+                          counterText: '',
                         ),
                       ),
-                    )
-                  : null,
-              suffixIcon: null,
-              prefixIconConstraints:
-                  const BoxConstraints(minWidth: 54, minHeight: 54),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 18,
-              ),
-              border: border,
-              enabledBorder: border,
-              focusedBorder: border,
-              errorBorder: border,
-              focusedErrorBorder: border,
-              disabledBorder: border,
-              counterText: '',
-            ),
-          ),
+                    ),
+                  ],
+                )
+              : TextField(
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  enabled: widget.enabled,
+                  readOnly: widget.readOnly,
+                  obscureText: widget.isPassword && _obscureText,
+                  maxLines: widget.isPassword
+                      ? 1
+                      : (widget.isMultiline ? (widget.maxLines ?? 5) : 1),
+                  minLines: widget.isMultiline ? (widget.minLines ?? 3) : null,
+                  keyboardType: widget.keyboardType ??
+                      (widget.isMultiline ? TextInputType.multiline : null),
+                  textInputAction: widget.textInputAction,
+                  onChanged: (val) {
+                    widget.onChanged?.call(val);
+                  },
+                  onSubmitted: widget.onSubmitted,
+                  onTap: widget.onTap,
+                  autofocus: widget.autofocus,
+                  maxLength: widget.maxLength,
+                  inputFormatters: widget.inputFormatters,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: widget.enabled
+                        ? (isDark ? c.neutral50 : c.neutral900)
+                        : c.textDisabled,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: widget.hint,
+                    hintStyle: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: isDark ? c.neutral600 : c.neutral400,
+                    ),
+                    filled: false,
+                    prefixIcon: widget.prefixIcon != null
+                        ? TweenAnimationBuilder<double>(
+                            tween: Tween(begin: 1.0, end: _isFocused ? 1.15 : 1.0),
+                            duration: AppConstants.durationFast,
+                            builder: (context, scale, child) {
+                              return Transform.scale(
+                                scale: scale,
+                                child: child,
+                              );
+                            },
+                            child: Center(
+                              widthFactor: 1.0,
+                              heightFactor: 1.0,
+                              child: HugeIcon(
+                                icon: widget.prefixIcon!,
+                                size: AppConstants.iconMd,
+                                color: _isFocused
+                                    ? (isDark ? c.primary400 : c.primary600)
+                                    : (isDark ? c.neutral400 : c.neutral500),
+                              ),
+                            ),
+                          )
+                        : null,
+                    suffixIcon: null,
+                    prefixIconConstraints: const BoxConstraints(
+                      minWidth: 44,
+                      maxWidth: 44,
+                      minHeight: 54,
+                      maxHeight: 54,
+                    ),
+                    contentPadding: const EdgeInsets.only(
+                      left: 18,
+                      right: 18,
+                      top: 18,
+                      bottom: 18,
+                    ),
+                    border: border,
+                    enabledBorder: border,
+                    focusedBorder: border,
+                    errorBorder: border,
+                    focusedErrorBorder: border,
+                    disabledBorder: border,
+                    counterText: '',
+                  ),
+                ),
         ),
 
         // ── Helper / Error text ───────────────────────────

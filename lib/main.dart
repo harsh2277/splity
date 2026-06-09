@@ -8,11 +8,15 @@ void main() async {
   runApp(const ProviderScope(child: SplityApp()));
 }
 
-class SplityApp extends StatelessWidget {
+final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.light);
+
+class SplityApp extends ConsumerWidget {
   const SplityApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider);
+
     return MaterialApp.router(
       title: 'Splity',
       debugShowCheckedModeBanner: false,
@@ -20,7 +24,7 @@ class SplityApp extends StatelessWidget {
       // ── Theme ────────────────────────────────────────────
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.light, // force light mode by default
+      themeMode: themeMode,
 
       routerConfig: appRouter,
     );

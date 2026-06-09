@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import 'expenses_provider.dart';
 
@@ -109,32 +110,23 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           ),
                         ],
                       ),
-                      Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          IconButton(
-                            icon: HugeIcon(
-                              icon: HugeIcons.strokeRoundedNotification01,
-                              color: isDark ? AppColors.neutral300 : AppColors.neutral700,
-                              size: 24,
-                            ),
-                            onPressed: () {
-                              // Open Notification Centre
-                            },
-                          ),
-                          Positioned(
-                            right: 10,
-                            top: 10,
-                            child: Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: AppColors.error500,
-                                shape: BoxShape.circle,
-                              ),
+                      GestureDetector(
+                        onTap: () => context.push('/user-profile'),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: isDark ? AppColors.primary400 : AppColors.primary600,
+                              width: 1.5,
                             ),
                           ),
-                        ],
+                          child: const CircleAvatar(
+                            radius: 18,
+                            backgroundImage: NetworkImage(
+                              'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),

@@ -8,6 +8,17 @@ import '../../features/groups/create_group_screen.dart';
 import '../../features/groups/join_group_screen.dart';
 import '../../features/groups/group_details_screen.dart';
 import '../../features/expenses/add_expense_screen.dart';
+import '../../features/members/add_member_screen.dart';
+import '../../features/members/member_details_screen.dart';
+import '../../features/history/history_screen.dart';
+import '../../features/settings/notifications_settings_screen.dart';
+import '../../features/settings/settings_screen.dart';
+import '../../features/settings/help_support_screen.dart';
+import '../../features/settings/live_chat_screen.dart';
+import '../../features/settings/email_support_screen.dart';
+import '../../features/settings/suggest_improvement_screen.dart';
+import '../../features/settings/user_profile_screen.dart';
+import '../../features/settings/edit_profile_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -51,6 +62,52 @@ final GoRouter appRouter = GoRouter(
       path: '/add-expense',
       builder: (context, state) => const AddExpenseScreen(),
     ),
+    GoRoute(
+      path: '/add-member',
+      builder: (context, state) => const AddMemberScreen(),
+    ),
+    GoRoute(
+      path: '/member-details/:id',
+      builder: (context, state) {
+        final id = state.pathParameters['id'] ?? '';
+        return MemberDetailsScreen(memberId: id);
+      },
+    ),
+    GoRoute(
+      path: '/history',
+      builder: (context, state) => const HistoryScreen(),
+    ),
+    GoRoute(
+      path: '/notifications',
+      builder: (context, state) => const NotificationsScreen(),
+    ),
+    GoRoute(
+      path: '/settings',
+      builder: (context, state) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: '/help-support',
+      builder: (context, state) => const HelpSupportScreen(),
+    ),
+    GoRoute(
+      path: '/live-chat',
+      builder: (context, state) => const LiveChatScreen(),
+    ),
+    GoRoute(
+      path: '/email-support',
+      builder: (context, state) => const EmailSupportScreen(),
+    ),
+    GoRoute(
+      path: '/suggest-improvement',
+      builder: (context, state) => const SuggestImprovementScreen(),
+    ),
+    GoRoute(
+      path: '/user-profile',
+      builder: (context, state) => const UserProfileScreen(),
+    ),
+    GoRoute(
+      path: '/edit-profile',
+      builder: (context, state) => const EditProfileScreen(),
+    ),
   ],
 );
-
