@@ -78,6 +78,7 @@ class ExpensesNotifier extends StateNotifier<List<Expense>> {
     required bool isPersonal,
     required bool isPaidByMe,
     String? payerName,
+    String? splitMethod,
   }) {
     final amountText = '₹${amount.toStringAsFixed(2)}';
     String subtitleText;
@@ -86,11 +87,12 @@ class ExpensesNotifier extends StateNotifier<List<Expense>> {
     if (isPersonal) {
       subtitleText = 'Personal Log';
     } else {
+      final splitStr = splitMethod ?? 'Split equally';
       if (isPaidByMe) {
-        subtitleText = 'Paid by You • Split equally';
+        subtitleText = 'Paid by You • $splitStr';
       } else {
         final payer = payerName ?? 'Partner';
-        subtitleText = '$groupName • Paid by $payer';
+        subtitleText = '$groupName • Paid by $payer • $splitStr';
         isOwedExpense = true;
       }
     }

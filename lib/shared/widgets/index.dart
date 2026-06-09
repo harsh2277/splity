@@ -13,6 +13,7 @@ export 'buttons/app_icon_button.dart';
 export 'inputs/app_text_field.dart';
 export 'inputs/app_search_field.dart';
 export 'inputs/app_otp_field.dart';
+export 'inputs/app_dropdown.dart';
 
 // Cards
 export 'cards/app_card.dart';

@@ -20,7 +20,7 @@ class SplityApp extends StatelessWidget {
       // ── Theme ────────────────────────────────────────────
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system, // follows device setting
+      themeMode: ThemeMode.light, // force light mode by default
 
       routerConfig: appRouter,
     );

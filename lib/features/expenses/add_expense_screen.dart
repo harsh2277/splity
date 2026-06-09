@@ -36,6 +36,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
   String? _amountError;
   String? _titleError;
+  String? _splitError;
   bool _isLoading = false;
 
   String _selectedCategory = 'food';
@@ -52,6 +53,11 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     'Dev Patel',
   ];
 
+  String _splitType = 'equal';
+  late Map<String, bool> _equalMembers;
+  late Map<String, TextEditingController> _percentageControllers;
+  late Map<String, TextEditingController> _customControllers;
+
   final List<_Category> _categories = [
     _Category(name: 'Food', id: 'food', icon: HugeIcons.strokeRoundedRestaurant, color: const Color(0xFFF59E0B)),
     _Category(name: 'Travel', id: 'travel', icon: HugeIcons.strokeRoundedCar01, color: const Color(0xFF3B82F6)),
@@ -67,6 +73,16 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     if (_groupMembers.isNotEmpty) {
       _selectedPayer = _groupMembers[0];
     }
+    _equalMembers = {for (var m in _groupMembers) m: true};
+    final initialPercentage = 100.0 / _groupMembers.length;
+    _percentageControllers = {
+      for (var m in _groupMembers)
+        m: TextEditingController(text: initialPercentage.toStringAsFixed(1))
+    };
+    _customControllers = {
+      for (var m in _groupMembers)
+        m: TextEditingController(text: '0.00')
+    };
   }
 
   @override
@@ -74,6 +90,12 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     _amountController.dispose();
     _titleController.dispose();
     _notesController.dispose();
+    for (var c in _percentageControllers.values) {
+      c.dispose();
+    }
+    for (var c in _customControllers.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -85,6 +107,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     setState(() {
       _amountError = null;
       _titleError = null;
+      _splitError = null;
     });
 
     if (amountText.isEmpty || amount <= 0) {
@@ -96,6 +119,36 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       return;
     }
 
+    if (!_isPersonal) {
+      if (_splitType == 'equal') {
+        final selectedCount = _equalMembers.values.where((v) => v).length;
+        if (selectedCount == 0) {
+          setState(() => _splitError = 'Select at least one member to split with');
+          return;
+        }
+      } else if (_splitType == 'percentage') {
+        double totalPct = 0;
+        for (var m in _groupMembers) {
+          final pct = double.tryParse(_percentageControllers[m]!.text.trim()) ?? 0.0;
+          totalPct += pct;
+        }
+        if ((totalPct - 100.0).abs() > 0.1) {
+          setState(() => _splitError = 'Total percentage must equal 100% (Current: ${totalPct.toStringAsFixed(1)}%)');
+          return;
+        }
+      } else if (_splitType == 'custom') {
+        double totalCustom = 0;
+        for (var m in _groupMembers) {
+          final val = double.tryParse(_customControllers[m]!.text.trim()) ?? 0.0;
+          totalCustom += val;
+        }
+        if ((totalCustom - amount).abs() > 0.01) {
+          setState(() => _splitError = 'Total custom shares (₹${totalCustom.toStringAsFixed(2)}) must equal the expense amount (₹${amount.toStringAsFixed(2)})');
+          return;
+        }
+      }
+    }
+
     setState(() => _isLoading = true);
 
     // Simulate saving
@@ -103,6 +156,23 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       if (!mounted) return;
 
       String groupName = 'Personal Spend';
+      String splitMethod = 'Split equally';
+
+      if (!_isPersonal) {
+        if (_splitType == 'percentage') {
+          splitMethod = 'Split by %';
+        } else if (_splitType == 'custom') {
+          splitMethod = 'Custom split';
+        } else {
+          final selectedCount = _equalMembers.values.where((v) => v).length;
+          if (selectedCount == _groupMembers.length) {
+            splitMethod = 'Split equally';
+          } else {
+            splitMethod = 'Split with $selectedCount members';
+          }
+        }
+      }
+
       if (!_isPersonal && _selectedGroupId != null) {
         final groups = ref.read(groupsProvider);
         final selectedGroup = groups.firstWhere(
@@ -120,6 +190,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
             isPersonal: _isPersonal,
             isPaidByMe: _isPaidByMe,
             payerName: _isPaidByMe ? null : _selectedPayer,
+            splitMethod: splitMethod,
           );
 
       setState(() => _isLoading = false);
@@ -192,31 +263,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
           ),
         ),
         centerTitle: true,
-        actions: [
-          if (_isLoading)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary500),
-                  ),
-                ),
-              ),
-            )
-          else
-            IconButton(
-              icon: HugeIcon(
-                icon: HugeIcons.strokeRoundedCheckmarkBadge01,
-                color: isDark ? AppColors.primary400 : AppColors.primary600,
-                size: 24,
-              ),
-              onPressed: _submit,
-            ),
-        ],
+        actions: const [],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -276,6 +323,12 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                               color: isDark ? AppColors.neutral700 : AppColors.neutral300,
                             ),
                             border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            errorBorder: InputBorder.none,
+                            focusedErrorBorder: InputBorder.none,
+                            disabledBorder: InputBorder.none,
+                            filled: false,
                             contentPadding: EdgeInsets.zero,
                           ),
                         ),
@@ -520,51 +573,21 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Group dropdown selector
-                    Text(
-                      'Select Group',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? AppColors.neutral400 : AppColors.neutral500,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.darkSurface2 : AppColors.neutral100,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _selectedGroupId,
-                          isExpanded: true,
-                          dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
-                          icon: HugeIcon(
-                            icon: HugeIcons.strokeRoundedArrowDown01,
-                            color: isDark ? AppColors.neutral400 : AppColors.neutral600,
-                            size: 20,
-                          ),
-                          items: groups.map((g) {
-                            return DropdownMenuItem<String>(
-                              value: g.id,
-                              child: Text(
-                                g.name,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: isDark ? AppColors.neutral50 : AppColors.neutral900,
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (val) {
-                            setState(() {
-                              _selectedGroupId = val;
-                            });
-                          },
-                        ),
-                      ),
+                    AppDropdown<String>(
+                      value: _selectedGroupId,
+                      label: 'Select Group',
+                      prefixIcon: HugeIcons.strokeRoundedUserGroup,
+                      items: groups.map((g) {
+                        return AppDropdownItem<String>(
+                          value: g.id,
+                          label: g.name,
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        setState(() {
+                          _selectedGroupId = val;
+                        });
+                      },
                     ),
                     const SizedBox(height: 16),
 
@@ -639,49 +662,56 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                     ),
 
                     if (!_isPaidByMe) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        'Select Payer',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? AppColors.neutral400 : AppColors.neutral500,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: isDark ? AppColors.darkSurface2 : AppColors.neutral100,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: _selectedPayer,
-                            isExpanded: true,
-                            dropdownColor: isDark ? AppColors.darkSurface : Colors.white,
-                            items: _groupMembers.map((m) {
-                              return DropdownMenuItem<String>(
-                                value: m,
-                                child: Text(
-                                  m,
-                                  style: GoogleFonts.plusJakartaSans(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                    color: isDark ? AppColors.neutral50 : AppColors.neutral900,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (val) {
-                              setState(() {
-                                _selectedPayer = val;
-                              });
-                            },
-                          ),
-                        ),
+                      const SizedBox(height: 16),
+                      AppDropdown<String>(
+                        value: _selectedPayer,
+                        label: 'Select Payer',
+                        prefixIcon: HugeIcons.strokeRoundedUser,
+                        items: _groupMembers.map((m) {
+                          return AppDropdownItem<String>(
+                            value: m,
+                            label: m,
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          setState(() {
+                            _selectedPayer = val;
+                          });
+                        },
                       ),
                     ],
+                    const SizedBox(height: 16),
+                    const Divider(height: 1),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Divide by',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: isDark ? AppColors.neutral300 : AppColors.neutral700,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          decoration: BoxDecoration(
+                            color: isDark ? AppColors.darkSurface2 : AppColors.neutral100,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            children: [
+                              _buildSplitTypeTab('equal', 'Equal', isDark),
+                              _buildSplitTypeTab('percentage', '%', isDark),
+                              _buildSplitTypeTab('custom', 'Custom', isDark),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    ..._buildSplitDetails(isDark),
                   ],
                 ),
               ),
@@ -733,6 +763,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
             // ── SAVE BUTTON ──────────────────────────────────────────────────
             AppButton(
               label: 'Save Expense',
+              size: AppButtonSize.lg,
+              hasShadow: false,
               onPressed: _submit,
               isLoading: _isLoading,
               leadingIcon: HugeIcons.strokeRoundedCheckmarkCircle01,
@@ -742,5 +774,269 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildSplitTypeTab(String type, String label, bool isDark) {
+    final isSelected = _splitType == type;
+    return GestureDetector(
+      onTap: () => setState(() => _splitType = type),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (isDark ? AppColors.primary400 : AppColors.primary600)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: isSelected
+                ? (isDark ? AppColors.darkBackground : Colors.white)
+                : (isDark ? AppColors.neutral400 : AppColors.neutral600),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildSplitDetails(bool isDark) {
+    final totalAmount = double.tryParse(_amountController.text.trim()) ?? 0.0;
+    final List<Widget> list = [];
+
+    if (_splitType == 'equal') {
+      final selectedCount = _equalMembers.values.where((v) => v).length;
+      final perPerson = selectedCount > 0 ? totalAmount / selectedCount : 0.0;
+
+      list.addAll([
+        Text(
+          'Split equally among members:',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isDark ? AppColors.neutral400 : AppColors.neutral500,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ..._groupMembers.map((member) {
+          final isSelected = _equalMembers[member] ?? false;
+          return CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              member,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: isDark ? AppColors.neutral50 : AppColors.neutral900,
+              ),
+            ),
+            subtitle: isSelected
+                ? Text(
+                    'Share: ₹${perPerson.toStringAsFixed(2)}',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      color: isDark ? AppColors.primary400 : AppColors.primary600,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  )
+                : null,
+            value: isSelected,
+            activeColor: isDark ? AppColors.primary400 : AppColors.primary600,
+            checkColor: isDark ? AppColors.darkBackground : Colors.white,
+            onChanged: (val) {
+              setState(() {
+                _equalMembers[member] = val ?? false;
+              });
+            },
+          );
+        }),
+      ]);
+    } else if (_splitType == 'percentage') {
+      list.addAll([
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Specify share percentage:',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isDark ? AppColors.neutral400 : AppColors.neutral500,
+              ),
+            ),
+            IconButton(
+              icon: Icon(Icons.refresh, size: 16, color: isDark ? AppColors.neutral400 : AppColors.neutral500),
+              tooltip: 'Reset to equal',
+              onPressed: () {
+                final initialPercentage = 100.0 / _groupMembers.length;
+                setState(() {
+                  for (var m in _groupMembers) {
+                    _percentageControllers[m]!.text = initialPercentage.toStringAsFixed(1);
+                  }
+                });
+              },
+            )
+          ],
+        ),
+        const SizedBox(height: 4),
+        ..._groupMembers.map((member) {
+          final pct = double.tryParse(_percentageControllers[member]!.text.trim()) ?? 0.0;
+          final amount = (totalAmount * pct) / 100.0;
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Text(
+                    member,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? AppColors.neutral50 : AppColors.neutral900,
+                    ),
+                  ),
+                ),
+                Text(
+                  '₹${amount.toStringAsFixed(2)}',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.neutral400 : AppColors.neutral500,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 70,
+                  height: 36,
+                  child: TextField(
+                    controller: _percentageControllers[member],
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? AppColors.neutral50 : AppColors.neutral900,
+                    ),
+                    onChanged: (val) {
+                      setState(() {});
+                    },
+                    decoration: InputDecoration(
+                      suffixText: '%',
+                      suffixStyle: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        color: isDark ? AppColors.neutral400 : AppColors.neutral500,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: isDark ? AppColors.darkSurface2 : AppColors.neutral200,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: isDark ? AppColors.darkSurface2 : AppColors.neutral200,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ]);
+    } else {
+      list.addAll([
+        Text(
+          'Specify exact share amount:',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isDark ? AppColors.neutral400 : AppColors.neutral500,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ..._groupMembers.map((member) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    member,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? AppColors.neutral50 : AppColors.neutral900,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 100,
+                  height: 36,
+                  child: TextField(
+                    controller: _customControllers[member],
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    textAlign: TextAlign.right,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? AppColors.neutral50 : AppColors.neutral900,
+                    ),
+                    onChanged: (val) {
+                      setState(() {});
+                    },
+                    decoration: InputDecoration(
+                      prefixText: '₹',
+                      prefixStyle: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        color: isDark ? AppColors.neutral400 : AppColors.neutral500,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: isDark ? AppColors.darkSurface2 : AppColors.neutral200,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: isDark ? AppColors.darkSurface2 : AppColors.neutral200,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ]);
+    }
+
+    if (_splitError != null) {
+      list.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: Text(
+            _splitError!,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              color: AppColors.error500,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return list;
   }
 }
