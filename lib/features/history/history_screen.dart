@@ -71,12 +71,13 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     final c = context.appColors;
     final activities = ref.watch(expensesProvider);
 
-    // Filter activities
+    // Filter activities - Fix 13: Exclude personal logs from Transaction History
     final filteredActivities = activities.where((act) {
       final matchesSearch = act.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           act.subtitle.toLowerCase().contains(_searchQuery.toLowerCase());
       final matchesCategory = _selectedCategory == 'all' || act.category == _selectedCategory;
-      return matchesSearch && matchesCategory;
+      // Personal logs go to Personal Tracker, not Transaction History
+      return matchesSearch && matchesCategory && !act.isPersonal;
     }).toList();
 
     return Scaffold(
@@ -89,6 +90,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             letterSpacing: -0.5,
           ),
         ),
+        centerTitle: true, // Fix 15
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: isDark ? c.neutral50 : c.neutral900,
@@ -231,90 +233,93 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                             prefix = '+';
                           }
 
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: isDark ? c.surface : Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: isDark ? c.surface3 : const Color(0xFFE2E8F0),
+                          return GestureDetector(
+                            onTap: () => context.push('/transaction-details', extra: item),
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: isDark ? c.surface : Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isDark ? c.surface3 : const Color(0xFFE2E8F0),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: isDark ? 0.05 : 0.01),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  )
+                                ],
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: isDark ? 0.05 : 0.01),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                )
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: _getCategoryColor(item.category, isDark),
-                                    borderRadius: BorderRadius.circular(14),
-                                  ),
-                                  child: Center(
-                                    child: HugeIcon(
-                                      icon: _getCategoryIcon(item.category),
-                                      color: _getCategoryIconColor(item.category, isDark),
-                                      size: 20,
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      color: _getCategoryColor(item.category, isDark),
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: Center(
+                                      child: HugeIcon(
+                                        icon: _getCategoryIcon(item.category),
+                                        color: _getCategoryIconColor(item.category, isDark),
+                                        size: 20,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item.title,
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: isDark ? c.neutral50 : c.neutral900,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          item.subtitle,
+                                          style: GoogleFonts.plusJakartaSans(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                            color: isDark ? c.neutral500 : c.neutral500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       Text(
-                                        item.title,
+                                        '$prefix${item.amount}',
                                         style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: isDark ? c.neutral50 : c.neutral900,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                          color: amountColor,
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        item.subtitle,
+                                        item.date,
                                         style: GoogleFonts.plusJakartaSans(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w500,
-                                          color: isDark ? c.neutral500 : c.neutral500,
+                                          fontSize: 10,
+                                          color: isDark ? AppColors.neutral600 : AppColors.neutral400,
                                         ),
                                       ),
                                     ],
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      '$prefix${item.amount}',
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w700,
-                                        color: amountColor,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      item.date,
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 10,
-                                        color: isDark ? AppColors.neutral600 : AppColors.neutral400,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           );
                         },

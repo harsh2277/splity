@@ -34,6 +34,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             letterSpacing: -0.5,
           ),
         ),
+        centerTitle: true, // Fix 15
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: isDark ? c.neutral50 : c.neutral900,
@@ -114,6 +115,35 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 24),
+
+                // Fix 12: Stats cards moved here from More tab
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatCard(
+                        title: 'Shared Spends',
+                        value: '₹1,085.00',
+                        color: const Color(0xFF10B981),
+                        icon: HugeIcons.strokeRoundedUserGroup,
+                        isDark: isDark,
+                        c: c,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildStatCard(
+                        title: 'Personal Spent',
+                        value: '₹6,240.00',
+                        color: isDark ? AppColors.neutral200 : AppColors.neutral800,
+                        icon: HugeIcons.strokeRoundedWallet02,
+                        isDark: isDark,
+                        c: c,
+                      ),
+                    ),
+                  ],
+                ),
+
                 const SizedBox(height: 32),
 
                 Text(
@@ -217,6 +247,62 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       indent: 58,
       endIndent: 16,
       color: isDark ? c.surface3 : AppColors.neutral100,
+    );
+  }
+
+  // Fix 12: Stat card widget for profile page
+  Widget _buildStatCard({
+    required String title,
+    required String value,
+    required Color color,
+    required List<List<dynamic>> icon,
+    required bool isDark,
+    required AppColorExtension c,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? c.surface : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? c.surface3 : AppColors.neutral200,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: HugeIcon(icon: icon, color: color, size: 16),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: isDark ? c.neutral50 : c.neutral900,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            title,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: isDark ? c.neutral500 : c.neutral500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

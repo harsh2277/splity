@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme_extensions.dart';
 import '../../shared/widgets/index.dart';
 import 'members_provider.dart';
@@ -22,6 +23,30 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _launchUPIPayment(BuildContext context, String memberId, String payeeName, double amount) async {
+    final upiUri = Uri.parse(
+      'upi://pay?pa=splity@upi&pn=${Uri.encodeComponent(payeeName)}&am=${amount.toStringAsFixed(2)}&cu=INR'
+    );
+    try {
+      if (await canLaunchUrl(upiUri)) {
+        await launchUrl(upiUri, mode: LaunchMode.externalApplication);
+        ref.read(membersProvider.notifier).settleMember(memberId);
+      } else {
+        AppSnackbar.error(
+          context,
+          'No UPI apps installed on this device.',
+          showAtTop: true,
+        );
+      }
+    } catch (e) {
+      AppSnackbar.error(
+        context,
+        'Could not launch UPI payment: $e',
+        showAtTop: true,
+      );
+    }
   }
 
   @override
@@ -228,7 +253,7 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                                     child: AppDivider(),
                                   ),
 
-                                  // --- Bottom Row: Member Status Info & Invite code representation ---
+                                  // --- Bottom Row: Status + Settle button ---
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
@@ -240,15 +265,41 @@ class _MembersScreenState extends ConsumerState<MembersScreen> {
                                           color: isDark ? c.neutral400 : c.neutral500,
                                         ),
                                       ),
-                                      AppBadge(
-                                        label: member.status.toUpperCase(),
-                                        type: member.status == 'owed'
-                                            ? AppBadgeType.success
-                                            : member.status == 'owe'
-                                                ? AppBadgeType.error
-                                                : AppBadgeType.neutral,
-                                        size: AppBadgeSize.sm,
-                                      ),
+                                      // Fix 8: Only show Settle Up button when YOU owe THEM
+                                      if (member.status == 'owe')
+                                        GestureDetector(
+                                          onTap: () => _launchUPIPayment(
+                                            context, member.id, member.name, member.amount,
+                                          ),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                                            decoration: BoxDecoration(
+                                              color: isDark
+                                                  ? c.error500.withValues(alpha: 0.15)
+                                                  : c.error500.withValues(alpha: 0.08),
+                                              borderRadius: BorderRadius.circular(10),
+                                              border: Border.all(
+                                                color: c.error500.withValues(alpha: 0.4),
+                                              ),
+                                            ),
+                                            child: Text(
+                                              'Settle Up',
+                                              style: GoogleFonts.plusJakartaSans(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w700,
+                                                color: c.error500,
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      else
+                                        AppBadge(
+                                          label: member.status.toUpperCase(),
+                                          type: member.status == 'owed'
+                                              ? AppBadgeType.success
+                                              : AppBadgeType.neutral,
+                                          size: AppBadgeSize.sm,
+                                        ),
                                     ],
                                   ),
                                 ],

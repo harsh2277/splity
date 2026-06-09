@@ -5,6 +5,10 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import 'expenses_provider.dart';
+import '../personal/personal_tracker_screen.dart';
+
+// Budget state provider – null means no budget set
+final personalBudgetProvider = StateProvider<double?>((ref) => null);
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -16,11 +20,6 @@ class DashboardScreen extends ConsumerStatefulWidget {
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   final PageController _cardPageController = PageController();
   int _currentCardIndex = 0;
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   void dispose() {
@@ -71,6 +70,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final activities = ref.watch(expensesProvider);
+    // Only show non-personal items in recent activity
+    final sharedActivities = activities.where((a) => !a.isPersonal).toList();
 
     return SafeArea(
       bottom: false,
@@ -189,7 +190,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
               // ── RECENT ACTIVITY HEADER ───────────────────────────
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
                 sliver: SliverToBoxAdapter(
                   child: Text(
                     'Recent Activity',
@@ -224,106 +225,129 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         width: 1,
                       ),
                     ),
-                    child: ListView.separated(
-                      shrinkWrap: true,
-                      padding: const EdgeInsets.all(8),
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: activities.length,
-                      separatorBuilder: (context, index) => Divider(
-                        height: 1,
-                        thickness: 1,
-                        color: isDark ? AppColors.darkSurface2 : AppColors.neutral100,
-                      ),
-                      itemBuilder: (context, index) {
-                        final item = activities[index];
-                        final isPersonal = item.isPersonal;
-                        final isOwed = item.isOwed;
-                        
-                        Color amountColor;
-                        String prefix = '';
-                        if (isPersonal) {
-                          amountColor = isDark ? AppColors.neutral300 : AppColors.neutral800;
-                        } else if (isOwed) {
-                          amountColor = AppColors.error500;
-                          prefix = '-';
-                        } else {
-                          amountColor = AppColors.success500;
-                          prefix = '+';
-                        }
+                    child: sharedActivities.isEmpty
+                        ? Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              children: [
+                                HugeIcon(
+                                  icon: HugeIcons.strokeRoundedReceiptText,
+                                  size: 36,
+                                  color: isDark ? AppColors.neutral600 : AppColors.neutral300,
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  'No recent activity',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark ? AppColors.neutral500 : AppColors.neutral400,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.separated(
+                            shrinkWrap: true,
+                            padding: const EdgeInsets.all(8),
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: sharedActivities.length,
+                            separatorBuilder: (context, index) => Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: isDark ? AppColors.darkSurface2 : AppColors.neutral100,
+                            ),
+                            itemBuilder: (context, index) {
+                              final item = sharedActivities[index];
+                              final isOwed = item.isOwed;
 
-                        return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: _getCategoryColor(item.category, isDark),
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                  child: Center(
-                                    child: HugeIcon(
-                                      icon: _getCategoryIcon(item.category),
-                                      color: _getCategoryIconColor(item.category, isDark),
-                                      size: 20,
-                                    ),
-                                  ),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      item.title,
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: isDark ? AppColors.neutral50 : AppColors.neutral900,
+                              Color amountColor;
+                              String prefix = '';
+                              if (isOwed) {
+                                amountColor = AppColors.error500;
+                                prefix = '-';
+                              } else {
+                                amountColor = AppColors.success500;
+                                prefix = '+';
+                              }
+
+                              // Fix 3: Tap recent activity → go to history
+                              return GestureDetector(
+                                onTap: () => context.push('/history'),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 44,
+                                        height: 44,
+                                        decoration: BoxDecoration(
+                                          color: _getCategoryColor(item.category, isDark),
+                                          borderRadius: BorderRadius.circular(14),
+                                        ),
+                                          child: Center(
+                                            child: HugeIcon(
+                                              icon: _getCategoryIcon(item.category),
+                                              color: _getCategoryIconColor(item.category, isDark),
+                                              size: 20,
+                                            ),
+                                          ),
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      item.subtitle,
-                                      style: GoogleFonts.plusJakartaSans(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w500,
-                                        color: isDark ? AppColors.neutral500 : AppColors.neutral500,
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              item.title,
+                                              style: GoogleFonts.plusJakartaSans(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                                color: isDark ? AppColors.neutral50 : AppColors.neutral900,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              item.subtitle,
+                                              style: GoogleFonts.plusJakartaSans(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w500,
+                                                color: isDark ? AppColors.neutral500 : AppColors.neutral500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(width: 8),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            '$prefix${item.amount}',
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w700,
+                                              color: amountColor,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            item.date,
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 10,
+                                              color: isDark ? AppColors.neutral600 : AppColors.neutral400,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    '$prefix${item.amount}',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w700,
-                                      color: amountColor,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    item.date,
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 10,
-                                      color: isDark ? AppColors.neutral600 : AppColors.neutral400,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
                   ),
                 ),
               ),
@@ -332,7 +356,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               _buildSectionHeader(context, isDark, 'Upcoming Settle Up'),
               _buildUpcomingSettleUpSection(isDark),
 
-              const SliverPadding(padding: EdgeInsets.only(bottom: 120)),
+              // Fix 18: more bottom padding so last card isn't cropped
+              const SliverPadding(padding: EdgeInsets.only(bottom: 160)),
             ],
           ),
         ),
@@ -423,6 +448,80 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Widget _buildPersonalBudgetCard(bool isDark) {
+    final budget = ref.watch(personalBudgetProvider);
+    final bool hasBudget = budget != null;
+
+    // FIX 1: Show empty state if no budget set
+    if (!hasBudget) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurface : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? AppColors.darkSurface2 : AppColors.neutral200,
+            width: 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedWallet02,
+              color: isDark ? AppColors.neutral500 : AppColors.neutral400,
+              size: 32,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'No personal budget set',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: isDark ? AppColors.neutral300 : AppColors.neutral700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Set a monthly limit to track your spending',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: isDark ? AppColors.neutral500 : AppColors.neutral500,
+              ),
+            ),
+            const SizedBox(height: 14),
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PersonalTrackerScreen(autoEditLimit: true),
+                  ),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.primary400 : AppColors.primary600,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  'Set Budget',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     const double limit = 10000.00;
     const double spent = 6240.00;
     const double progress = spent / limit;
@@ -533,7 +632,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  // Helper to build headers for sections
+  // Helper to build headers for sections — Fix 19: uniform padding
   Widget _buildSectionHeader(BuildContext context, bool isDark, String title) {
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 10),
@@ -541,7 +640,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         child: Text(
           title,
           style: GoogleFonts.plusJakartaSans(
-            fontSize: 16,
+            fontSize: 18,
             fontWeight: FontWeight.w700,
             color: isDark ? AppColors.neutral50 : AppColors.neutral900,
           ),
@@ -550,12 +649,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  // Quick Groups Section Widget
+  // Fix 2: Active Groups — clickable, navigate to group details
   Widget _buildQuickGroupsSection(bool isDark) {
     final List<Map<String, dynamic>> groups = [
-      {'name': 'Office Chai ☕', 'members': '8 Members', 'balance': 'Owe ₹40.00'},
-      {'name': 'Friday Lunch 🍔', 'members': '5 Members', 'balance': 'Owed ₹450.00'},
-      {'name': 'Flatmates 🏠', 'members': '3 Members', 'balance': 'Settled'},
+      {'id': '1', 'name': 'Office Chai ☕', 'members': '8 Members', 'balance': 'Owe ₹40.00'},
+      {'id': '2', 'name': 'Friday Lunch 🍔', 'members': '5 Members', 'balance': 'Owed ₹450.00'},
+      {'id': '3', 'name': 'Flatmates 🏠', 'members': '3 Members', 'balance': 'Settled'},
     ];
 
     return SliverPadding(
@@ -611,51 +710,55 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               }
 
               final g = groups[index];
-              return Container(
-                width: 150,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: isDark ? AppColors.darkSurface2 : AppColors.neutral200,
-                    width: 1,
+              return GestureDetector(
+                // Fix 2: Navigate to group details on tap
+                onTap: () => context.push('/group-details/${g['id']}'),
+                child: Container(
+                  width: 150,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkSurface : Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isDark ? AppColors.darkSurface2 : AppColors.neutral200,
+                      width: 1,
+                    ),
                   ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      g['name'],
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? AppColors.neutral50 : AppColors.neutral900,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        g['name'],
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? AppColors.neutral50 : AppColors.neutral900,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      g['members'],
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isDark ? AppColors.neutral500 : AppColors.neutral500,
+                      Text(
+                        g['members'],
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isDark ? AppColors.neutral500 : AppColors.neutral500,
+                        ),
                       ),
-                    ),
-                    Text(
-                      g['balance'],
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: g['balance'].contains('Owed')
-                            ? AppColors.success500
-                            : g['balance'].contains('Owe')
-                                ? AppColors.error500
-                                : AppColors.neutral500,
+                      Text(
+                        g['balance'],
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: g['balance'].contains('Owed')
+                              ? AppColors.success500
+                              : g['balance'].contains('Owe')
+                                  ? AppColors.error500
+                                  : AppColors.neutral500,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },
@@ -670,8 +773,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       sliver: SliverToBoxAdapter(
-        child: Container(
-          padding: const EdgeInsets.all(16),
+        child: GestureDetector(
+          onTap: () => context.push('/member-details/2'),
+          child: Container(
+            padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: isDark ? AppColors.darkSurface : Colors.white,
             borderRadius: BorderRadius.circular(16),
@@ -744,7 +849,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
 }

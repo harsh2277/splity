@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,6 +8,48 @@ import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/index.dart';
 import '../groups/groups_provider.dart';
 import 'expenses_provider.dart';
+
+// Fix 11: Indian number format with commas (e.g., 1,00,000) with 5,00,000 max
+class _IndianCurrencyFormatter extends TextInputFormatter {
+  static const int _maxValue = 500000;
+
+  String _formatIndian(String digits) {
+    if (digits.isEmpty) return '';
+    // Split decimal if present
+    final parts = digits.split('.');
+    final intPart = parts[0];
+    final decPart = parts.length > 1 ? '.${parts[1]}' : '';
+
+    if (intPart.length <= 3) return '$intPart$decPart';
+    final last3 = intPart.substring(intPart.length - 3);
+    final rest = intPart.substring(0, intPart.length - 3);
+    final groups = <String>[];
+    for (int i = rest.length; i > 0; i -= 2) {
+      groups.insert(0, rest.substring(i > 2 ? i - 2 : 0, i));
+    }
+    return '${groups.join(',')},$last3$decPart';
+  }
+
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    // Strip commas to get raw digits
+    final rawText = newValue.text.replaceAll(',', '');
+    // Allow only digits and one decimal point
+    if (!RegExp(r'^\d*\.?\d{0,2}$').hasMatch(rawText)) {
+      return oldValue;
+    }
+    // Check max value
+    final numericVal = double.tryParse(rawText) ?? 0;
+    if (numericVal > _maxValue) return oldValue;
+
+    final formatted = _formatIndian(rawText);
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
 
 class _Category {
   final String name;
@@ -23,7 +66,8 @@ class _Category {
 }
 
 class AddExpenseScreen extends ConsumerStatefulWidget {
-  const AddExpenseScreen({super.key});
+  final String? defaultGroupId;
+  const AddExpenseScreen({super.key, this.defaultGroupId});
 
   @override
   ConsumerState<AddExpenseScreen> createState() => _AddExpenseScreenState();
@@ -41,7 +85,11 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
   String _selectedCategory = 'food';
   String? _selectedGroupId;
-  bool _isPersonal = true;
+  
+  // _expenseMode: 0 = Personal, 1 = Group, 2 = 1-on-1 Member
+  int _expenseMode = 0;
+  
+  bool get _isPersonal => _expenseMode == 0;
   bool _isPaidByMe = true;
   String? _selectedPayer;
   DateTime _selectedDate = DateTime.now();
@@ -52,6 +100,35 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     'Rohit Sen',
     'Dev Patel',
   ];
+
+  final List<String> _allAppMembers = const [
+    'Prem Parmar',
+    'Aman Gupta',
+    'Rohit Sen',
+    'Dev Patel',
+    'Neha Sharma',
+    'Ishaan Verma',
+  ];
+
+  final List<String> _singleMembersList = const [
+    'Aman Gupta',
+    'Rohit Sen',
+    'Dev Patel',
+    'Neha Sharma',
+    'Ishaan Verma',
+  ];
+
+  String? _selectedSingleMember = 'Aman Gupta';
+
+  List<String> get _activeSplitMembers {
+    if (_expenseMode == 0) {
+      return const ['Prem Parmar'];
+    } else if (_expenseMode == 1) {
+      return _groupMembers;
+    } else {
+      return ['Prem Parmar', _selectedSingleMember ?? 'Aman Gupta'];
+    }
+  }
 
   String _splitType = 'equal';
   late Map<String, bool> _equalMembers;
@@ -70,23 +147,53 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   @override
   void initState() {
     super.initState();
+    
+    // Default Group setup if passed
+    if (widget.defaultGroupId != null) {
+      _selectedGroupId = widget.defaultGroupId;
+      _expenseMode = 1; // Default to Group
+    }
+
     if (_groupMembers.isNotEmpty) {
       _selectedPayer = _groupMembers[0];
     }
-    _equalMembers = {for (var m in _groupMembers) m: true};
-    final initialPercentage = 100.0 / _groupMembers.length;
+    
+    _equalMembers = {for (var m in _allAppMembers) m: true};
     _percentageControllers = {
-      for (var m in _groupMembers)
-        m: TextEditingController(text: initialPercentage.toStringAsFixed(1))
+      for (var m in _allAppMembers)
+        m: TextEditingController()
     };
     _customControllers = {
-      for (var m in _groupMembers)
+      for (var m in _allAppMembers)
         m: TextEditingController(text: '0.00')
     };
+
+    _amountController.addListener(_resetSplitToEqual);
+    _resetSplitToEqual();
+  }
+
+  void _resetSplitToEqual() {
+    final active = _activeSplitMembers;
+    final initialPercentage = active.isNotEmpty ? 100.0 / active.length : 0.0;
+    final totalAmount = double.tryParse(_amountController.text.trim().replaceAll(',', '')) ?? 0.0;
+    final perPersonCustom = active.isNotEmpty ? totalAmount / active.length : 0.0;
+
+    setState(() {
+      for (var m in _allAppMembers) {
+        _equalMembers[m] = active.contains(m);
+        _percentageControllers[m]!.text = active.contains(m)
+            ? initialPercentage.toStringAsFixed(1)
+            : '0.0';
+        _customControllers[m]!.text = active.contains(m)
+            ? perPersonCustom.toStringAsFixed(2)
+            : '0.00';
+      }
+    });
   }
 
   @override
   void dispose() {
+    _amountController.removeListener(_resetSplitToEqual);
     _amountController.dispose();
     _titleController.dispose();
     _notesController.dispose();
@@ -100,7 +207,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   }
 
   void _submit() {
-    final amountText = _amountController.text.trim();
+    // Strip commas before parsing
+    final amountText = _amountController.text.trim().replaceAll(',', '');
     final title = _titleController.text.trim();
     final amount = double.tryParse(amountText) ?? 0.0;
 
@@ -121,14 +229,14 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
     if (!_isPersonal) {
       if (_splitType == 'equal') {
-        final selectedCount = _equalMembers.values.where((v) => v).length;
+        final selectedCount = _activeSplitMembers.where((m) => _equalMembers[m] ?? false).length;
         if (selectedCount == 0) {
           setState(() => _splitError = 'Select at least one member to split with');
           return;
         }
       } else if (_splitType == 'percentage') {
         double totalPct = 0;
-        for (var m in _groupMembers) {
+        for (var m in _activeSplitMembers) {
           final pct = double.tryParse(_percentageControllers[m]!.text.trim()) ?? 0.0;
           totalPct += pct;
         }
@@ -138,7 +246,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         }
       } else if (_splitType == 'custom') {
         double totalCustom = 0;
-        for (var m in _groupMembers) {
+        for (var m in _activeSplitMembers) {
           final val = double.tryParse(_customControllers[m]!.text.trim()) ?? 0.0;
           totalCustom += val;
         }
@@ -158,28 +266,31 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       String groupName = 'Personal Spend';
       String splitMethod = 'Split equally';
 
-      if (!_isPersonal) {
+      if (_expenseMode == 1) { // Group mode
         if (_splitType == 'percentage') {
           splitMethod = 'Split by %';
         } else if (_splitType == 'custom') {
           splitMethod = 'Custom split';
         } else {
-          final selectedCount = _equalMembers.values.where((v) => v).length;
-          if (selectedCount == _groupMembers.length) {
+          final selectedCount = _activeSplitMembers.where((m) => _equalMembers[m] ?? false).length;
+          if (selectedCount == _activeSplitMembers.length) {
             splitMethod = 'Split equally';
           } else {
             splitMethod = 'Split with $selectedCount members';
           }
         }
-      }
 
-      if (!_isPersonal && _selectedGroupId != null) {
-        final groups = ref.read(groupsProvider);
-        final selectedGroup = groups.firstWhere(
-          (g) => g.id == _selectedGroupId,
-          orElse: () => groups.first,
-        );
-        groupName = selectedGroup.name;
+        if (_selectedGroupId != null) {
+          final groups = ref.read(groupsProvider);
+          final selectedGroup = groups.firstWhere(
+            (g) => g.id == _selectedGroupId,
+            orElse: () => groups.first,
+          );
+          groupName = selectedGroup.name;
+        }
+      } else if (_expenseMode == 2) { // 1-on-1 mode
+        splitMethod = '1-on-1 split';
+        groupName = '1-on-1 with $_selectedSingleMember';
       }
 
       ref.read(expensesProvider.notifier).addExpense(
@@ -309,6 +420,8 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                         child: TextField(
                           controller: _amountController,
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          // Fix 11: Indian currency format + max 5,00,000
+                          inputFormatters: [_IndianCurrencyFormatter()],
                           textAlign: TextAlign.center,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 40,
@@ -436,9 +549,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
             ),
             const SizedBox(height: 24),
 
-            // ── TYPE SELECTION (PERSONAL VS GROUP) ───────────────────────────
+            // ── TYPE SELECTION (PERSONAL, GROUP, 1-ON-1) ───────────────────────────
             Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: isDark ? AppColors.darkSurface : AppColors.neutral100,
                 borderRadius: BorderRadius.circular(16),
@@ -451,15 +564,20 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 children: [
                   Expanded(
                     child: GestureDetector(
-                      onTap: () => setState(() => _isPersonal = true),
+                      onTap: () {
+                        setState(() {
+                          _expenseMode = 0;
+                          _resetSplitToEqual();
+                        });
+                      },
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: _isPersonal
+                          color: _expenseMode == 0
                               ? (isDark ? AppColors.darkSurface3 : Colors.white)
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(12),
-                          boxShadow: _isPersonal
+                          boxShadow: _expenseMode == 0
                               ? [
                                   BoxShadow(
                                     color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
@@ -475,18 +593,18 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                             children: [
                               HugeIcon(
                                 icon: HugeIcons.strokeRoundedUser,
-                                color: _isPersonal
+                                color: _expenseMode == 0
                                     ? (isDark ? AppColors.primary400 : AppColors.primary600)
                                     : (isDark ? AppColors.neutral400 : AppColors.neutral500),
-                                size: 18,
+                                size: 16,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 6),
                               Text(
-                                'Personal Log',
+                                'Personal',
                                 style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 13,
-                                  fontWeight: _isPersonal ? FontWeight.w700 : FontWeight.w500,
-                                  color: _isPersonal
+                                  fontSize: 12,
+                                  fontWeight: _expenseMode == 0 ? FontWeight.w700 : FontWeight.w500,
+                                  color: _expenseMode == 0
                                       ? (isDark ? AppColors.neutral50 : AppColors.neutral900)
                                       : (isDark ? AppColors.neutral500 : AppColors.neutral600),
                                 ),
@@ -501,20 +619,21 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                     child: GestureDetector(
                       onTap: () {
                         setState(() {
-                          _isPersonal = false;
+                          _expenseMode = 1;
                           if (_selectedGroupId == null && groups.isNotEmpty) {
                             _selectedGroupId = groups.first.id;
                           }
+                          _resetSplitToEqual();
                         });
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: !_isPersonal
+                          color: _expenseMode == 1
                               ? (isDark ? AppColors.darkSurface3 : Colors.white)
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(12),
-                          boxShadow: !_isPersonal
+                          boxShadow: _expenseMode == 1
                               ? [
                                   BoxShadow(
                                     color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
@@ -530,18 +649,71 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                             children: [
                               HugeIcon(
                                 icon: HugeIcons.strokeRoundedUserGroup,
-                                color: !_isPersonal
+                                color: _expenseMode == 1
                                     ? (isDark ? AppColors.primary400 : AppColors.primary600)
                                     : (isDark ? AppColors.neutral400 : AppColors.neutral500),
-                                size: 18,
+                                size: 16,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 6),
                               Text(
-                                'Group Expense',
+                                'Group',
                                 style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 13,
-                                  fontWeight: !_isPersonal ? FontWeight.w700 : FontWeight.w500,
-                                  color: !_isPersonal
+                                  fontSize: 12,
+                                  fontWeight: _expenseMode == 1 ? FontWeight.w700 : FontWeight.w500,
+                                  color: _expenseMode == 1
+                                      ? (isDark ? AppColors.neutral50 : AppColors.neutral900)
+                                      : (isDark ? AppColors.neutral500 : AppColors.neutral600),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _expenseMode = 2;
+                          _resetSplitToEqual();
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _expenseMode == 2
+                              ? (isDark ? AppColors.darkSurface3 : Colors.white)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: _expenseMode == 2
+                              ? [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  )
+                                ]
+                              : null,
+                        ),
+                        child: Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              HugeIcon(
+                                icon: HugeIcons.strokeRoundedUser,
+                                color: _expenseMode == 2
+                                    ? (isDark ? AppColors.primary400 : AppColors.primary600)
+                                    : (isDark ? AppColors.neutral400 : AppColors.neutral500),
+                                size: 16,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '1-on-1',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 12,
+                                  fontWeight: _expenseMode == 2 ? FontWeight.w700 : FontWeight.w500,
+                                  color: _expenseMode == 2
                                       ? (isDark ? AppColors.neutral50 : AppColors.neutral900)
                                       : (isDark ? AppColors.neutral500 : AppColors.neutral600),
                                 ),
@@ -572,23 +744,45 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Group dropdown selector
-                    AppDropdown<String>(
-                      value: _selectedGroupId,
-                      label: 'Select Group',
-                      prefixIcon: HugeIcons.strokeRoundedUserGroup,
-                      items: groups.map((g) {
-                        return AppDropdownItem<String>(
-                          value: g.id,
-                          label: g.name,
-                        );
-                      }).toList(),
-                      onChanged: (val) {
-                        setState(() {
-                          _selectedGroupId = val;
-                        });
-                      },
-                    ),
+                    if (_expenseMode == 1) ...[
+                      // Group dropdown selector
+                      AppDropdown<String>(
+                        value: _selectedGroupId,
+                        label: 'Select Group',
+                        prefixIcon: HugeIcons.strokeRoundedUserGroup,
+                        items: groups.map((g) {
+                          return AppDropdownItem<String>(
+                            value: g.id,
+                            label: g.name,
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          setState(() {
+                            _selectedGroupId = val;
+                            _resetSplitToEqual();
+                          });
+                        },
+                      ),
+                    ] else if (_expenseMode == 2) ...[
+                      // Single Member dropdown selector
+                      AppDropdown<String>(
+                        value: _selectedSingleMember,
+                        label: 'Select Member',
+                        prefixIcon: HugeIcons.strokeRoundedUser,
+                        items: _singleMembersList.map((m) {
+                          return AppDropdownItem<String>(
+                            value: m,
+                            label: m,
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          setState(() {
+                            _selectedSingleMember = val;
+                            _resetSplitToEqual();
+                          });
+                        },
+                      ),
+                    ],
                     const SizedBox(height: 16),
 
                     // Paid by option
@@ -667,7 +861,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                         value: _selectedPayer,
                         label: 'Select Payer',
                         prefixIcon: HugeIcons.strokeRoundedUser,
-                        items: _groupMembers.map((m) {
+                        items: _activeSplitMembers.map((m) {
                           return AppDropdownItem<String>(
                             value: m,
                             label: m,
@@ -820,7 +1014,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        ..._groupMembers.map((member) {
+        ..._activeSplitMembers.map((member) {
           final isSelected = _equalMembers[member] ?? false;
           return CheckboxListTile(
             contentPadding: EdgeInsets.zero,
@@ -870,9 +1064,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
               icon: Icon(Icons.refresh, size: 16, color: isDark ? AppColors.neutral400 : AppColors.neutral500),
               tooltip: 'Reset to equal',
               onPressed: () {
-                final initialPercentage = 100.0 / _groupMembers.length;
+                final initialPercentage = 100.0 / _activeSplitMembers.length;
                 setState(() {
-                  for (var m in _groupMembers) {
+                  for (var m in _activeSplitMembers) {
                     _percentageControllers[m]!.text = initialPercentage.toStringAsFixed(1);
                   }
                 });
@@ -881,7 +1075,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
           ],
         ),
         const SizedBox(height: 4),
-        ..._groupMembers.map((member) {
+        ..._activeSplitMembers.map((member) {
           final pct = double.tryParse(_percentageControllers[member]!.text.trim()) ?? 0.0;
           final amount = (totalAmount * pct) / 100.0;
 
@@ -962,7 +1156,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        ..._groupMembers.map((member) {
+        ..._activeSplitMembers.map((member) {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
             child: Row(

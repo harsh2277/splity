@@ -19,6 +19,11 @@ import '../../features/settings/email_support_screen.dart';
 import '../../features/settings/suggest_improvement_screen.dart';
 import '../../features/settings/user_profile_screen.dart';
 import '../../features/settings/edit_profile_screen.dart';
+import '../../features/payments/payment_success_screen.dart';
+import '../../features/payments/payment_waiting_screen.dart';
+import '../../features/payments/payment_error_screen.dart';
+import '../../features/history/transaction_details_screen.dart';
+import '../../features/expenses/expenses_provider.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -60,7 +65,10 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/add-expense',
-      builder: (context, state) => const AddExpenseScreen(),
+      builder: (context, state) {
+        final groupId = state.uri.queryParameters['groupId'];
+        return AddExpenseScreen(defaultGroupId: groupId);
+      },
     ),
     GoRoute(
       path: '/add-member',
@@ -108,6 +116,25 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/edit-profile',
       builder: (context, state) => const EditProfileScreen(),
+    ),
+    GoRoute(
+      path: '/payment-success',
+      builder: (context, state) => const PaymentSuccessScreen(),
+    ),
+    GoRoute(
+      path: '/payment-waiting',
+      builder: (context, state) => const PaymentWaitingScreen(),
+    ),
+    GoRoute(
+      path: '/payment-error',
+      builder: (context, state) => const PaymentErrorScreen(),
+    ),
+    GoRoute(
+      path: '/transaction-details',
+      builder: (context, state) {
+        final expense = state.extra as Expense;
+        return TransactionDetailsScreen(expense: expense);
+      },
     ),
   ],
 );

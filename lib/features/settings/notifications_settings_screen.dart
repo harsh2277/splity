@@ -79,6 +79,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             letterSpacing: -0.5,
           ),
         ),
+        centerTitle: true, // Fix 15
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: isDark ? c.neutral50 : c.neutral900,

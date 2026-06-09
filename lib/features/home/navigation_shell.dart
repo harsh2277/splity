@@ -34,6 +34,7 @@ class _NavigationShellState extends State<NavigationShell> {
 
     return Scaffold(
       extendBody: true, // Allows screen content to extend behind bottom app bar
+      resizeToAvoidBottomInset: false, // Fix 10: Prevent keyboard from pushing up bottom bar
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,

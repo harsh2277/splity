@@ -7,13 +7,23 @@ import '../../core/theme/app_theme_extensions.dart';
 import '../../shared/widgets/index.dart';
 
 class PersonalTrackerScreen extends StatefulWidget {
-  const PersonalTrackerScreen({super.key});
+  final bool autoEditLimit;
+  const PersonalTrackerScreen({super.key, this.autoEditLimit = false});
 
   @override
   State<PersonalTrackerScreen> createState() => _PersonalTrackerScreenState();
 }
 
 class _PersonalTrackerScreenState extends State<PersonalTrackerScreen> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.autoEditLimit) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _editLimit();
+      });
+    }
+  }
   double _limit = 10000.00;
   final List<Map<String, dynamic>> _spends = [
     {
@@ -305,6 +315,7 @@ class _PersonalTrackerScreenState extends State<PersonalTrackerScreen> {
             letterSpacing: -0.5,
           ),
         ),
+        centerTitle: true, // Fix 15
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: isDark ? c.neutral50 : c.neutral900,

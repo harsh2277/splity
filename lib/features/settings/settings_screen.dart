@@ -114,6 +114,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             letterSpacing: -0.5,
           ),
         ),
+        centerTitle: true, // Fix 15
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: isDark ? c.neutral50 : c.neutral900,
@@ -158,21 +159,98 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 const SizedBox(height: 10),
                 AppCard(
                   variant: AppCardVariant.elevated,
-                  child: Column(
-                    children: [
-                      _buildToggleItem(
-                        icon: HugeIcons.strokeRoundedMoon02,
-                        iconColor: isDark ? AppColors.info400 : AppColors.info600,
-                        title: 'Dark Mode',
-                        subtitle: 'Enable dark theme for the app',
-                        value: isDark,
-                        onChanged: (val) {
-                          ref.read(themeModeProvider.notifier).state =
-                              val ? ThemeMode.dark : ThemeMode.light;
-                        },
-                        isDark: isDark,
-                      ),
-                    ],
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: (isDark ? AppColors.info400 : AppColors.info600).withValues(alpha: isDark ? 0.2 : 0.08),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: HugeIcon(
+                            icon: isDark ? HugeIcons.strokeRoundedMoon02 : HugeIcons.strokeRoundedSun01,
+                            color: isDark ? AppColors.info400 : AppColors.warning500,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Dark Mode',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 14, fontWeight: FontWeight.w600,
+                                  color: isDark ? AppColors.neutral50 : AppColors.neutral900,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                isDark ? 'Dark theme active' : 'Light theme active',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 11, fontWeight: FontWeight.w500,
+                                  color: AppColors.neutral500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Fix 16: Animated segmented toggle
+                        GestureDetector(
+                          onTap: () {
+                            ref.read(themeModeProvider.notifier).state =
+                                isDark ? ThemeMode.light : ThemeMode.dark;
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            width: 60,
+                            height: 32,
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: isDark ? AppColors.primary900 : AppColors.neutral200,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: isDark ? AppColors.primary400 : AppColors.neutral300,
+                                width: 1,
+                              ),
+                            ),
+                            child: Stack(
+                              children: [
+                                AnimatedAlign(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOutCubic,
+                                  alignment: isDark ? Alignment.centerRight : Alignment.centerLeft,
+                                  child: Container(
+                                    width: 24,
+                                    height: 24,
+                                    decoration: BoxDecoration(
+                                      color: isDark ? AppColors.primary400 : Colors.white,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.12),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 1),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Icon(
+                                      isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                                      size: 14,
+                                      color: isDark ? Colors.white : AppColors.warning500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),

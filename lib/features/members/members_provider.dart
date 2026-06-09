@@ -85,7 +85,7 @@ class MembersNotifier extends StateNotifier<List<Member>> {
               MemberTransaction(
                 title: 'Team Coffee Break',
                 amount: '₹180.00',
-                date: '2 days ago',
+                date: 'Jun 7, 2026',
                 status: 'Approved',
                 category: 'Dining',
                 youPaid: true,
@@ -123,7 +123,7 @@ class MembersNotifier extends StateNotifier<List<Member>> {
               MemberTransaction(
                 title: 'Cab Share to Client',
                 amount: '₹150.00',
-                date: '3 days ago',
+                date: 'Jun 6, 2026',
                 status: 'Approved',
                 category: 'Travel',
                 youPaid: false,

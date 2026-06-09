@@ -14,8 +14,6 @@ class HelpSupportScreen extends StatefulWidget {
 }
 
 class _HelpSupportScreenState extends State<HelpSupportScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
   int _expandedIndex = -1;
 
   final List<Map<String, String>> _faqs = [
@@ -37,14 +35,8 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
     },
   ];
 
-  List<Map<String, String>> get _filteredFaqs {
-    if (_searchQuery.trim().isEmpty) return _faqs;
-    return _faqs
-        .where((faq) =>
-            faq['question']!.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            faq['answer']!.toLowerCase().contains(_searchQuery.toLowerCase()))
-        .toList();
-  }
+  List<Map<String, String>> get _filteredFaqs => _faqs;
+
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +53,7 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
             letterSpacing: -0.5,
           ),
         ),
+        centerTitle: true, // Fix 15
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: isDark ? c.neutral50 : c.neutral900,
@@ -95,25 +88,6 @@ class _HelpSupportScreenState extends State<HelpSupportScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Search Input Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-              child: AppSearchField(
-                controller: _searchController,
-                hint: 'Search FAQs & guidebooks...',
-                onChanged: (val) {
-                  setState(() {
-                    _searchQuery = val;
-                  });
-                },
-                onClear: () {
-                  setState(() {
-                    _searchQuery = '';
-                  });
-                },
-              ),
-            ),
-
             Expanded(
               child: ListView(
                 physics: const BouncingScrollPhysics(),

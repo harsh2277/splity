@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme_extensions.dart';
 import '../../shared/widgets/index.dart';
@@ -19,6 +22,132 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
   late TextEditingController _upiController;
+
+  File? _imageFile;
+  bool _isImageRemoved = false;
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: source, imageQuality: 70);
+      if (pickedFile != null) {
+        setState(() {
+          _imageFile = File(pickedFile.path);
+          _isImageRemoved = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        AppSnackbar.error(
+          context,
+          'Failed to pick image: $e',
+          showAtTop: true,
+        );
+      }
+    }
+  }
+
+  // Fix 20: Platform-native image picker dialog
+  void _showImagePickerDialog(BuildContext context, bool isDark) {
+    final c = context.appColors;
+    if (Theme.of(context).platform == TargetPlatform.iOS) {
+      showCupertinoModalPopup(
+        context: context,
+        builder: (BuildContext context) => CupertinoActionSheet(
+          title: const Text('Change Profile Photo'),
+          message: const Text('Upload a photo from your camera or gallery'),
+          actions: <CupertinoActionSheetAction>[
+            CupertinoActionSheetAction(
+              child: const Text('Take Photo'),
+              onPressed: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            CupertinoActionSheetAction(
+              child: const Text('Choose from Gallery'),
+              onPressed: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+            CupertinoActionSheetAction(
+              isDestructiveAction: true,
+              child: const Text('Remove Photo'),
+              onPressed: () {
+                Navigator.pop(context);
+                setState(() {
+                  _imageFile = null;
+                  _isImageRemoved = true;
+                });
+                AppSnackbar.error(context, 'Profile photo removed', showAtTop: true);
+              },
+            ),
+          ],
+          cancelButton: CupertinoActionSheetAction(
+            child: const Text('Cancel'),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+        ),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: isDark ? c.surface : Colors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (BuildContext context) {
+          return SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                ListTile(
+                  leading: Icon(Icons.photo_camera, color: isDark ? c.neutral300 : c.neutral700),
+                  title: Text(
+                    'Take Photo',
+                    style: TextStyle(color: isDark ? c.neutral50 : c.neutral900),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.camera);
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.photo_library, color: isDark ? c.neutral300 : c.neutral700),
+                  title: Text(
+                    'Choose from Gallery',
+                    style: TextStyle(color: isDark ? c.neutral50 : c.neutral900),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.gallery);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.delete, color: AppColors.error500),
+                  title: const Text(
+                    'Remove Photo',
+                    style: TextStyle(color: AppColors.error500),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      _imageFile = null;
+                      _isImageRemoved = true;
+                    });
+                    AppSnackbar.error(context, 'Profile photo removed', showAtTop: true);
+                  },
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -64,6 +193,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             letterSpacing: -0.5,
           ),
         ),
+        centerTitle: true, // Fix 15
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: isDark ? c.neutral50 : c.neutral900,
@@ -120,6 +250,59 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       fontSize: 13,
                       color: c.neutral500,
                       fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Fix 20: Tappable profile image with camera overlay
+                  Center(
+                    child: GestureDetector(
+                      onTap: () => _showImagePickerDialog(context, isDark),
+                      child: Stack(
+                        children: [
+                          CircleAvatar(
+                            radius: 46,
+                            backgroundColor: isDark ? c.surface3 : c.neutral200,
+                            backgroundImage: _isImageRemoved
+                                ? null
+                                : (_imageFile != null
+                                    ? FileImage(_imageFile!) as ImageProvider
+                                    : const NetworkImage(
+                                        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
+                                      )),
+                            child: _isImageRemoved
+                                ? Text(
+                                    'PP',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w800,
+                                      color: isDark ? c.neutral50 : c.neutral900,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(7),
+                              decoration: BoxDecoration(
+                                color: isDark ? AppColors.primary400 : AppColors.primary600,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: isDark ? c.background : Colors.white,
+                                  width: 2,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt_rounded,
+                                color: Colors.white,
+                                size: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),

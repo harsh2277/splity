@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme_extensions.dart';
 import '../../shared/widgets/index.dart';
@@ -19,6 +20,30 @@ class MemberDetailsScreen extends ConsumerStatefulWidget {
 
 class _MemberDetailsScreenState extends ConsumerState<MemberDetailsScreen> {
   int _activeTab = 0; // 0: History, 1: Details
+
+  Future<void> _launchUPIPayment(BuildContext context, String payeeName, double amount) async {
+    final upiUri = Uri.parse(
+      'upi://pay?pa=splity@upi&pn=${Uri.encodeComponent(payeeName)}&am=${amount.toStringAsFixed(2)}&cu=INR'
+    );
+    try {
+      if (await canLaunchUrl(upiUri)) {
+        await launchUrl(upiUri, mode: LaunchMode.externalApplication);
+        ref.read(membersProvider.notifier).settleMember(widget.memberId);
+      } else {
+        AppSnackbar.error(
+          context,
+          'No UPI apps installed on this device.',
+          showAtTop: true,
+        );
+      }
+    } catch (e) {
+      AppSnackbar.error(
+        context,
+        'Could not launch UPI payment: $e',
+        showAtTop: true,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -195,17 +220,12 @@ class _MemberDetailsScreenState extends ConsumerState<MemberDetailsScreen> {
                   child: _buildActionBtn(
                     label: 'Settle Up',
                     icon: HugeIcons.strokeRoundedMoneySend02,
-                    onTap: () {
-                      ref.read(membersProvider.notifier).settleMember(member.id);
-                      AppSnackbar.success(
-                        context,
-                        'Settled up successfully with ${member.name}!',
-                        showAtTop: true,
-                      );
-                    },
+                    // Fix 7 & Fix 8: Show payment apps if 'owe', disabled if 'owed' or 'settled'
+                    onTap: () => _launchUPIPayment(context, member.name, member.amount),
                     isDark: isDark,
                     c: c,
-                    isEnabled: member.status != 'settled',
+                    // Fix 8: disable if owed to you (you don't need to pay) or settled
+                    isEnabled: member.status == 'owe',
                   ),
                 ),
                 const SizedBox(width: 12),

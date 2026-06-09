@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:iconsax_flutter/iconsax_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_theme_extensions.dart';
 import '../../shared/widgets/index.dart';
 import 'groups_provider.dart';
@@ -85,6 +86,104 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen> {
           },
         );
       },
+    );
+  }
+
+  // Fix 5 & 6: Settle Up bottom sheet
+  Future<void> _launchUPIPayment(BuildContext context, String payeeName, double amount) async {
+    final upiUri = Uri.parse(
+      'upi://pay?pa=splity@upi&pn=${Uri.encodeComponent(payeeName)}&am=${amount.toStringAsFixed(2)}&cu=INR'
+    );
+    try {
+      if (await canLaunchUrl(upiUri)) {
+        await launchUrl(upiUri, mode: LaunchMode.externalApplication);
+      } else {
+        AppSnackbar.error(
+          context,
+          'No UPI apps installed on this device.',
+          showAtTop: true,
+        );
+      }
+    } catch (e) {
+      AppSnackbar.error(
+        context,
+        'Could not launch UPI payment: $e',
+        showAtTop: true,
+      );
+    }
+  }
+
+  Widget _buildPaymentAppRow({
+    required bool isDark,
+    required dynamic c,
+    required VoidCallback onClose,
+  }) {
+    final apps = [
+      {'name': 'GPay', 'color': const Color(0xFF4285F4), 'emoji': '🔵'},
+      {'name': 'PhonePe', 'color': const Color(0xFF5F259F), 'emoji': '🟣'},
+      {'name': 'Paytm', 'color': const Color(0xFF002970), 'emoji': '🔷'},
+      {'name': 'BHIM', 'color': const Color(0xFF1A237E), 'emoji': '🇮🇳'},
+      {'name': 'Bank Transfer', 'color': const Color(0xFF0D9488), 'emoji': '🏦'},
+    ];
+
+    return Column(
+      children: [
+        GridView.count(
+          crossAxisCount: 3,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 1.1,
+          children: apps.map((app) {
+            return GestureDetector(
+              onTap: () {
+                Navigator.pop(context);
+                AppSnackbar.success(
+                  context,
+                  'Opening ${app['name']} to pay...',
+                  showAtTop: true,
+                );
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isDark ? c.surface2 : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isDark ? c.surface3 : c.neutral200,
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      app['emoji'] as String,
+                      style: const TextStyle(fontSize: 28),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      app['name'] as String,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? c.neutral300 : c.neutral700,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 16),
+        AppButton(
+          label: 'Cancel',
+          variant: AppButtonVariant.ghost,
+          hasShadow: false,
+          onPressed: onClose,
+        ),
+      ],
     );
   }
 
@@ -365,7 +464,8 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen> {
                   child: _buildActionGridBtn(
                     label: 'Add Expense',
                     icon: Iconsax.add,
-                    onTap: () => AppSnackbar.success(context, 'Add Expense flow triggered!'),
+                    // Fix 4: Navigate to add expense screen with groupId
+                    onTap: () => context.push('/add-expense?groupId=${group.id}'),
                     isDark: isDark,
                     c: c,
                   ),
@@ -375,7 +475,11 @@ class _GroupDetailsScreenState extends ConsumerState<GroupDetailsScreen> {
                   child: _buildActionGridBtn(
                     label: 'Settle Up',
                     icon: Iconsax.card_send_copy,
-                    onTap: () {},
+                    // Fix 5/6: Launch native mobile default UPI apps chooser
+                    onTap: () {
+                      final double amountVal = double.tryParse(cleanAmount.replaceAll('₹', '').replaceAll(',', '').trim()) ?? 0.0;
+                      _launchUPIPayment(context, group.name, amountVal);
+                    },
                     isDark: isDark,
                     c: c,
                     isEnabled: group.balance != 'Settled',
