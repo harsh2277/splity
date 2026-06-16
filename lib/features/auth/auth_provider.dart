@@ -1,6 +1,8 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/services/api_service.dart';
 import 'package:dio/dio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import '../../core/services/api_service.dart';
 
 class AuthState {
   final bool isAuthenticated;
@@ -79,8 +81,45 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<String?> signInWithGoogle() async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        state = state.copyWith(isLoading: false);
+        return 'Google sign-in cancelled';
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      final idToken = await userCredential.user?.getIdToken();
+
+      if (idToken == null) throw Exception('Failed to get ID token');
+
+      final res = await _api.dio.post('/auth/google', data: {'id_token': idToken});
+      await _api.saveToken(res.data['token']);
+      state = state.copyWith(isAuthenticated: true, isLoading: false, user: res.data['user']);
+      return null;
+    } on DioException catch (e) {
+      final msg = e.response?.data?['error'] ?? 'Google sign-in failed';
+      state = state.copyWith(isLoading: false, error: msg);
+      return msg;
+    } catch (e) {
+      final msg = e.toString();
+      state = state.copyWith(isLoading: false, error: msg);
+      return msg;
+    }
+  }
+
   Future<void> logout() async {
     await _api.clearToken();
+    await GoogleSignIn().signOut();
+    await FirebaseAuth.instance.signOut();
     state = const AuthState();
   }
 }

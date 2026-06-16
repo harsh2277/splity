@@ -8,6 +8,7 @@ import '../../core/theme/app_theme_extensions.dart';
 import '../../core/constants/app_constants.dart';
 import '../../shared/widgets/index.dart';
 import 'auth_provider.dart';
+import 'google_button.dart';
 
 // Country model
 class _Country {
@@ -206,7 +207,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final isDark = context.isDark;
 
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       backgroundColor: isDark ? c.background : c.neutral50,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -430,6 +431,38 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 isFullWidth: true,
                 isLoading: _isLoading,
                 onPressed: _register,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: Divider(color: isDark ? c.neutral700 : c.neutral300)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'or',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 13,
+                        color: isDark ? c.neutral400 : c.neutral500,
+                      ),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: isDark ? c.neutral700 : c.neutral300)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _GoogleButton(
+                isLoading: _isLoading,
+                onPressed: () async {
+                  final error = await ref.read(authProvider.notifier).signInWithGoogle();
+                  if (!mounted) return;
+                  if (error == null) {
+                    context.go('/dashboard-demo');
+                  } else if (error != 'Google sign-in cancelled') {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(error)),
+                    );
+                  }
+                },
               ),
               const SizedBox(height: 20),
               Row(

@@ -1,5 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const https = require('https');
 const jwt = require('jsonwebtoken');
 const { sql } = require('../config/db');
 const { authenticate } = require('../middleware/auth');
@@ -96,6 +97,52 @@ router.get('/me', authenticate, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/auth/google — verify Firebase ID token and return our JWT
+router.post('/google', async (req, res) => {
+  try {
+    const { id_token } = req.body;
+    if (!id_token) return res.status(400).json({ error: 'id_token is required' });
+
+    // Verify the Firebase ID token via Google's tokeninfo endpoint
+    const googleData = await new Promise((resolve, reject) => {
+      https.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${id_token}`, (r) => {
+        let body = '';
+        r.on('data', (chunk) => (body += chunk));
+        r.on('end', () => {
+          try {
+            const parsed = JSON.parse(body);
+            if (parsed.error) reject(new Error(parsed.error_description || parsed.error));
+            else resolve(parsed);
+          } catch (e) { reject(e); }
+        });
+      }).on('error', reject);
+    });
+
+    const { email, name, picture, sub: googleId } = googleData;
+    if (!email) return res.status(400).json({ error: 'Could not get email from Google token' });
+
+    // Upsert user
+    let [user] = await sql`SELECT id, name, email, phone, upi_id, avatar_url FROM users WHERE email = ${email}`;
+
+    if (!user) {
+      [user] = await sql`
+        INSERT INTO users (name, email, password_hash, avatar_url)
+        VALUES (${name || email.split('@')[0]}, ${email}, ${'google_' + googleId}, ${picture || null})
+        RETURNING id, name, email, phone, upi_id, avatar_url, created_at
+      `;
+    }
+
+    const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+    });
+
+    res.json({ user, token });
+  } catch (err) {
+    console.error(err);
+    res.status(401).json({ error: 'Invalid Google token' });
   }
 });
 
