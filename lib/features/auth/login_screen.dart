@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_theme_extensions.dart';
 import '../../shared/widgets/index.dart';
-import 'auth_provider.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -29,7 +27,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _login() async {
+  void _login() {
     setState(() {
       _emailError = null;
       _passwordError = null;
@@ -54,30 +52,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    final success = await ref.read(authProvider.notifier).login(email, password);
-
-    if (!mounted) return;
-
-    setState(() => _isLoading = false);
-
-    if (success) {
-      context.go('/dashboard-demo');
-    } else {
-      final error = ref.read(authProvider).error ?? 'Login failed';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-      );
-    }
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        context.go('/dashboard-demo');
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final c = context.appColors;
     final isDark = context.isDark;
-    final authState = ref.watch(authProvider);
 
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       backgroundColor: isDark ? c.background : c.neutral50,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -182,7 +171,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           size: AppButtonSize.lg,
                           hasShadow: false,
                           isFullWidth: true,
-                          isLoading: authState.isLoading || _isLoading,
+                          isLoading: _isLoading,
                           onPressed: _login,
                         ),
                         const SizedBox(height: 20),

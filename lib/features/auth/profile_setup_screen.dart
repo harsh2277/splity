@@ -1,10 +1,8 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_theme_extensions.dart';
 import '../../core/constants/app_constants.dart';
-import '../../core/services/api_service.dart';
 import '../../shared/widgets/index.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
@@ -35,7 +33,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     super.dispose();
   }
 
-  Future<void> _submitProfile() async {
+  void _submitProfile() {
     setState(() {
       _nameError = null;
       _upiError = null;
@@ -66,28 +64,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       _isLoading = true;
     });
 
-    try {
-      await ApiService().dio.patch('/users/profile', data: {
-        'name': name,
-        if (upi.isNotEmpty) 'upi_id': upi,
-      });
+    Future.delayed(const Duration(milliseconds: 1800), () {
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
         context.go('/dashboard-demo');
       }
-    } on DioException catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        final msg = e.response?.data?['error'] ?? 'Failed to update profile';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg)),
-        );
-      }
-    }
+    });
   }
 
   @override

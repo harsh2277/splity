@@ -142,8 +142,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/transaction-details',
       builder: (context, state) {
-        final expense = state.extra as Expense?;
-        if (expense == null) return const SizedBox();
+        final expense = state.extra as Expense;
         return TransactionDetailsScreen(expense: expense);
       },
     ),

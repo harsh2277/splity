@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/services/api_service.dart';
 import '../../shared/widgets/index.dart';
 import '../groups/groups_provider.dart';
 import 'expenses_provider.dart';
@@ -261,25 +259,14 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
     setState(() => _isLoading = true);
 
-    try {
-      await ApiService().dio.post('/expenses', data: {
-        'title': title,
-        'amount': amount,
-        'category': _selectedCategory,
-        'is_personal': _isPersonal,
-        'group_id': _selectedGroupId,
-        'paid_by': _isPaidByMe ? null : _selectedPayer,
-        'split_method': _splitType,
-        'notes': _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
-        'expense_date': _selectedDate.toIso8601String().split('T')[0],
-      });
-
+    // Simulate saving
+    Future.delayed(const Duration(milliseconds: 600), () {
       if (!mounted) return;
 
       String groupName = 'Personal Spend';
       String splitMethod = 'Split equally';
 
-      if (_expenseMode == 1) {
+      if (_expenseMode == 1) { // Group mode
         if (_splitType == 'percentage') {
           splitMethod = 'Split by %';
         } else if (_splitType == 'custom') {
@@ -295,15 +282,13 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
         if (_selectedGroupId != null) {
           final groups = ref.read(groupsProvider);
-          if (groups.isNotEmpty) {
-            final selectedGroup = groups.firstWhere(
-              (g) => g.id == _selectedGroupId,
-              orElse: () => groups.first,
-            );
-            groupName = selectedGroup.name;
-          }
+          final selectedGroup = groups.firstWhere(
+            (g) => g.id == _selectedGroupId,
+            orElse: () => groups.first,
+          );
+          groupName = selectedGroup.name;
         }
-      } else if (_expenseMode == 2) {
+      } else if (_expenseMode == 2) { // 1-on-1 mode
         splitMethod = '1-on-1 split';
         groupName = '1-on-1 with $_selectedSingleMember';
       }
@@ -322,14 +307,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       setState(() => _isLoading = false);
       AppSnackbar.success(context, 'Expense added successfully!', showAtTop: true);
       context.pop();
-    } on DioException catch (e) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      final msg = e.response?.data?['error'] ?? 'Failed to save expense';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(msg)),
-      );
-    }
+    });
   }
 
   Future<void> _selectDate() async {
@@ -1019,7 +997,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
   }
 
   List<Widget> _buildSplitDetails(bool isDark) {
-    final totalAmount = double.tryParse(_amountController.text.trim().replaceAll(',', '')) ?? 0.0;
+    final totalAmount = double.tryParse(_amountController.text.trim()) ?? 0.0;
     final List<Widget> list = [];
 
     if (_splitType == 'equal') {

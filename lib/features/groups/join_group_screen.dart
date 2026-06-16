@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_theme_extensions.dart';
-import '../../core/services/api_service.dart';
 import '../../shared/widgets/index.dart';
 import 'groups_provider.dart';
 
@@ -24,7 +22,7 @@ class _JoinGroupScreenState extends ConsumerState<JoinGroupScreen> with SingleTi
   
   String? _codeError;
   bool _isLoading = false;
-  bool _isPermissionDenied = false;
+  final bool _isPermissionDenied = false;
 
   @override
   void initState() {
@@ -40,18 +38,8 @@ class _JoinGroupScreenState extends ConsumerState<JoinGroupScreen> with SingleTi
     super.dispose();
   }
 
-  String _extractCode(String raw) {
-    final uri = Uri.tryParse(raw);
-    if (uri != null && uri.pathSegments.isNotEmpty) {
-      return uri.pathSegments.last.toUpperCase();
-    }
-    return raw.trim().toUpperCase();
-  }
-
-  Future<void> _submitCode(String rawCode) async {
-    final code = _extractCode(rawCode);
-
-    if (code.length < 4) {
+  void _submitCode(String code) {
+    if (code.trim().length < 4) {
       setState(() {
         _codeError = 'Invite Code must be at least 4 characters';
       });
@@ -63,28 +51,26 @@ class _JoinGroupScreenState extends ConsumerState<JoinGroupScreen> with SingleTi
       _codeError = null;
     });
 
-    try {
-      await ApiService().dio.post('/groups/join', data: {'invite_code': code});
-
+    Future.delayed(const Duration(milliseconds: 1200), () {
       if (!mounted) return;
-
+      final success = ref.read(groupsProvider.notifier).joinGroup(code);
+      
       setState(() {
         _isLoading = false;
       });
 
-      AppSnackbar.success(
-        context,
-        'Successfully joined group!',
-      );
-      context.pop();
-    } on DioException catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        _isLoading = false;
-        _codeError = e.response?.data?['error'] ?? 'Already a member of this group or code is invalid.';
-      });
-    }
+      if (success) {
+        AppSnackbar.success(
+          context,
+          'Successfully joined group!',
+        );
+        context.pop();
+      } else {
+        setState(() {
+          _codeError = 'Already a member of this group or code is invalid.';
+        });
+      }
+    });
   }
 
   @override
@@ -231,7 +217,7 @@ class _JoinGroupScreenState extends ConsumerState<JoinGroupScreen> with SingleTi
                                 final List<Barcode> barcodes = capture.barcodes;
                                 for (final barcode in barcodes) {
                                   if (barcode.rawValue != null) {
-                                    final scannedCode = _extractCode(barcode.rawValue!);
+                                    final scannedCode = barcode.rawValue!;
                                     _scannerController.stop();
                                     _submitCode(scannedCode);
                                     break;

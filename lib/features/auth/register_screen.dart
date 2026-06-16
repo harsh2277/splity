@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_theme_extensions.dart';
 import '../../core/constants/app_constants.dart';
 import '../../shared/widgets/index.dart';
-import 'auth_provider.dart';
 
 // Country model
 class _Country {
@@ -93,14 +91,14 @@ const List<_Country> _allCountries = [
   _Country(flag: '🇪🇨', name: 'Ecuador', code: '+593', hint: '099 123 4567'),
 ];
 
-class RegisterScreen extends ConsumerStatefulWidget {
+class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -146,7 +144,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
-  Future<void> _register() async {
+  void _register() {
     setState(() {
       _emailError = null;
       _passwordError = null;
@@ -178,26 +176,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     setState(() => _isLoading = true);
 
-    final fullPhone = phone.isNotEmpty ? '${_selected.code}$phone' : null;
-    final success = await ref.read(authProvider.notifier).register(
-      '',
-      email,
-      password,
-      phone: fullPhone,
-    );
-
-    if (!mounted) return;
-
-    setState(() => _isLoading = false);
-
-    if (success) {
-      context.go('/profile-setup');
-    } else {
-      final error = ref.read(authProvider).error ?? 'Registration failed';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-      );
-    }
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        context.go('/profile-setup');
+      }
+    });
   }
 
   @override
@@ -206,7 +190,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final isDark = context.isDark;
 
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       backgroundColor: isDark ? c.background : c.neutral50,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
