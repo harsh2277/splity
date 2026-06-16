@@ -1,7 +1,9 @@
 import 'package:go_router/go_router.dart';
 import '../../features/auth/splash_screen.dart';
 import '../../features/auth/onboarding_screen.dart';
-import '../../features/auth/otp_screen.dart';
+import '../../features/auth/login_screen.dart';
+import '../../features/auth/register_screen.dart';
+import '../../features/auth/forgot_password_screen.dart';
 import '../../features/auth/profile_setup_screen.dart';
 import '../../features/home/navigation_shell.dart';
 import '../../features/groups/create_group_screen.dart';
@@ -38,7 +40,15 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/login',
-      builder: (context, state) => const OtpScreen(),
+      builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: '/register',
+      builder: (context, state) => const RegisterScreen(),
+    ),
+    GoRoute(
+      path: '/forgot-password',
+      builder: (context, state) => const ForgotPasswordScreen(),
     ),
     GoRoute(
       path: '/profile-setup',

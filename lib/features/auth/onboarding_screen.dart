@@ -250,9 +250,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  // Phone OTP login alternative
+                  // Email login alternative
                   AppButton(
-                    label: 'Continue with Phone & OTP',
+                    label: 'Continue with Email',
                     variant: AppButtonVariant.ghost,
                     isFullWidth: true,
                     size: AppButtonSize.lg,

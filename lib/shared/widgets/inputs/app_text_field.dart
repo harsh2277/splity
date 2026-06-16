@@ -68,7 +68,7 @@ class AppTextField extends StatefulWidget {
 }
 
 class _AppTextFieldState extends State<AppTextField> {
-  final bool _obscureText = true;
+  bool _obscureText = true;
   late FocusNode _focusNode;
   late TextEditingController _controller;
   bool _isFocused = false;
@@ -289,7 +289,26 @@ class _AppTextFieldState extends State<AppTextField> {
                             ),
                           )
                         : null,
-                    suffixIcon: null,
+                    suffixIcon: widget.isPassword
+                        ? GestureDetector(
+                            onTap: () => setState(() => _obscureText = !_obscureText),
+                            child: Center(
+                              child: HugeIcon(
+                                icon: _obscureText
+                                    ? HugeIcons.strokeRoundedView
+                                    : HugeIcons.strokeRoundedViewOff,
+                                size: 22,
+                                color: context.appColors.neutral400,
+                              ),
+                            ),
+                          )
+                        : null,
+                    suffixIconConstraints: const BoxConstraints(
+                      minWidth: 44,
+                      maxWidth: 44,
+                      minHeight: 44,
+                      maxHeight: 44,
+                    ),
                     prefixIconConstraints: const BoxConstraints(
                       minWidth: 44,
                       maxWidth: 44,

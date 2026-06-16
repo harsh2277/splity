@@ -15,11 +15,9 @@ class ProfileSetupScreen extends StatefulWidget {
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _upiController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
 
   String? _nameError;
   String? _upiError;
-  String? _emailError;
   bool _isLoading = false;
 
   int _selectedAvatarIndex = 0;
@@ -32,7 +30,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   void dispose() {
     _nameController.dispose();
     _upiController.dispose();
-    _emailController.dispose();
     super.dispose();
   }
 
@@ -40,12 +37,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     setState(() {
       _nameError = null;
       _upiError = null;
-      _emailError = null;
     });
 
     final name = _nameController.text.trim();
     final upi = _upiController.text.trim();
-    final email = _emailController.text.trim();
 
     bool hasError = false;
 
@@ -59,13 +54,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     if (upi.isNotEmpty && !RegExp(r'^[\w\.\-_]{2,256}@[a-zA-Z]{2,64}$').hasMatch(upi)) {
       setState(() {
         _upiError = 'Please enter a valid UPI ID (e.g., john@oksbi)';
-      });
-      hasError = true;
-    }
-
-    if (email.isNotEmpty && !RegExp(r'^[\w\.\-]+@([\w\-]+\.)+[a-zA-Z]{2,10}$').hasMatch(email)) {
-      setState(() {
-        _emailError = 'Please enter a valid email address';
       });
       hasError = true;
     }
@@ -120,7 +108,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                         const SizedBox(height: 8),
                         // Subheading
                         Text(
-                          'Set up your username and UPI details to split expenses with colleagues.',
+                          'Add your name and UPI ID so colleagues can identify and pay you.',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
@@ -224,18 +212,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                           label: 'UPI ID (Optional)',
                           hint: 'e.g. name@oksbi',
                           errorText: _upiError,
-                          keyboardType: TextInputType.emailAddress,
-                          textInputAction: TextInputAction.next,
-                          enabled: !_isLoading,
-                          showCounter: false,
-                        ),
-                        const SizedBox(height: 16),
-
-                        AppTextField(
-                          controller: _emailController,
-                          label: 'Email Address',
-                          hint: 'e.g. name@example.com',
-                          errorText: _emailError,
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.done,
                           enabled: !_isLoading,
