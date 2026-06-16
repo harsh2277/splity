@@ -1,8 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_theme_extensions.dart';
+import '../../core/services/api_service.dart';
 import '../../shared/widgets/index.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -25,7 +27,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  void _sendResetLink() {
+  Future<void> _sendResetLink() async {
     setState(() => _emailError = null);
 
     final email = _emailController.text.trim();
@@ -37,14 +39,26 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     setState(() => _isLoading = true);
 
-    Future.delayed(const Duration(milliseconds: 1500), () {
+    try {
+      await ApiService().dio.post('/auth/forgot-password', data: {'email': email});
       if (mounted) {
         setState(() {
           _isLoading = false;
           _emailSent = true;
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('If that email exists, a reset link was sent.')),
+        );
       }
-    });
+    } on DioException catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        final msg = e.response?.data?['error'] ?? 'Failed to send reset link';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg)),
+        );
+      }
+    }
   }
 
   @override

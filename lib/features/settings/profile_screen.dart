@@ -93,61 +93,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // ── PAYMENT SCREENS DEMO ─────────────────────────────
-                Text(
-                  'Payment Screens Demo',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? AppColors.neutral400 : AppColors.neutral700,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkSurface2 : Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: isDark ? AppColors.darkSurface3 : AppColors.neutral200.withValues(alpha: 0.8),
-                      width: 1,
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      _buildSettingItem(
-                        icon: HugeIcons.strokeRoundedCheckmarkCircle02,
-                        iconColor: const Color(0xFF10B981),
-                        title: 'Payment Success',
-                        subtitle: 'Simulated payment success page',
-                        trailing: const HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, size: 20),
-                        onTap: () => context.push('/payment-success'),
-                        isDark: isDark,
-                      ),
-                      _buildDivider(isDark),
-                      _buildSettingItem(
-                        icon: HugeIcons.strokeRoundedLoading03,
-                        iconColor: isDark ? AppColors.primary400 : AppColors.primary600,
-                        title: 'Payment Waiting',
-                        subtitle: 'Simulated payment processing page',
-                        trailing: const HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, size: 20),
-                        onTap: () => context.push('/payment-waiting'),
-                        isDark: isDark,
-                      ),
-                      _buildDivider(isDark),
-                      _buildSettingItem(
-                        icon: HugeIcons.strokeRoundedAlertCircle,
-                        iconColor: const Color(0xFFEF4444),
-                        title: 'Payment Failed',
-                        subtitle: 'Simulated payment failure page',
-                        trailing: const HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, size: 20),
-                        onTap: () => context.push('/payment-error'),
-                        isDark: isDark,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-
                 // ── PREFERENCES & SUPPORT ─────────────────────────
                 Text(
                   'Preferences & Support',

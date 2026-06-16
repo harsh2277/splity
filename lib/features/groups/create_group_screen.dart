@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_theme_extensions.dart';
+import '../../core/services/api_service.dart';
 import '../../shared/widgets/index.dart';
 import 'groups_provider.dart';
 import 'group_success_screen.dart';
@@ -108,7 +110,7 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
     }
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     setState(() {
       _nameError = null;
     });
@@ -127,9 +129,18 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
       _isLoading = true;
     });
 
-    Future.delayed(const Duration(milliseconds: 1500), () {
+    try {
+      final res = await ApiService().dio.post('/groups', data: {
+        'name': name,
+        'company_name': company.isEmpty ? 'Personal' : company,
+        'type': _selectedType,
+        'approval_required': _approvalRequired,
+        'image_url': _imageFile != null ? _imageFile!.path : 'preset_icon:$_selectedGraphic',
+      });
+
       if (!mounted) return;
-      
+
+      // Also create locally for UI
       final newGroup = ref.read(groupsProvider.notifier).createGroup(
         name: name,
         companyName: company.isEmpty ? 'Personal' : company,
@@ -137,6 +148,8 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
         approvalRequired: _approvalRequired,
         imageUrl: _imageFile != null ? _imageFile!.path : 'preset_icon:$_selectedGraphic',
       );
+
+      final inviteCode = res.data?['invite_code'] ?? newGroup.inviteCode;
 
       setState(() {
         _isLoading = false;
@@ -157,19 +170,28 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
         showDragHandle: false,
         builder: (context) {
           return GroupSuccessSheet(
-            groupName: newGroup.name,
-            inviteCode: newGroup.inviteCode,
+            groupName: name,
+            inviteCode: inviteCode,
             onClose: () {
-              Navigator.pop(context); // Close bottom sheet
+              Navigator.pop(context);
             },
           );
         },
       ).then((_) {
         if (mounted) {
-          context.pop(); // Pop CreateGroupScreen back to groups list
+          context.pop();
         }
       });
-    });
+    } on DioException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+      final msg = e.response?.data?['error'] ?? 'Failed to create group';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg)),
+      );
+    }
   }
 
   @override

@@ -63,8 +63,11 @@ dependencies:
   qr_flutter: ^4.1.0
   mobile_scanner: ^4.0.0
 
+  # HTTP Client
+  dio: ^5.4.3
+
   # Cache & Persistence
-  shared_preferences: ^2.3.0
+  shared_preferences: ^2.3.2
 
   # Typography
   google_fonts: ^6.2.1
