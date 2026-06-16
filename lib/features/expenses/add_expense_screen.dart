@@ -208,7 +208,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  void _submit() {
     // Strip commas before parsing
     final amountText = _amountController.text.trim().replaceAll(',', '');
     final title = _titleController.text.trim();

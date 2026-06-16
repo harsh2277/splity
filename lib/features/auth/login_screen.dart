@@ -6,7 +6,6 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../core/theme/app_theme_extensions.dart';
 import '../../shared/widgets/index.dart';
 import 'auth_provider.dart';
-import 'google_button.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -78,7 +77,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final authState = ref.watch(authProvider);
 
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       backgroundColor: isDark ? c.background : c.neutral50,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -185,38 +184,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           isFullWidth: true,
                           isLoading: authState.isLoading || _isLoading,
                           onPressed: _login,
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(child: Divider(color: isDark ? c.neutral700 : c.neutral300)),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              child: Text(
-                                'or',
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 13,
-                                  color: isDark ? c.neutral400 : c.neutral500,
-                                ),
-                              ),
-                            ),
-                            Expanded(child: Divider(color: isDark ? c.neutral700 : c.neutral300)),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        _GoogleButton(
-                          isLoading: authState.isLoading,
-                          onPressed: () async {
-                            final error = await ref.read(authProvider.notifier).signInWithGoogle();
-                            if (!mounted) return;
-                            if (error == null) {
-                              context.go('/dashboard-demo');
-                            } else if (error != 'Google sign-in cancelled') {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(error)),
-                              );
-                            }
-                          },
                         ),
                         const SizedBox(height: 20),
                         Row(
