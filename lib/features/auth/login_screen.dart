@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme/app_theme_extensions.dart';
 import '../../shared/widgets/index.dart';
+import 'auth_provider.dart';
+import 'auth_service.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -27,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _login() {
+  Future<void> _login() async {
     setState(() {
       _emailError = null;
       _passwordError = null;
@@ -52,12 +56,32 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    Future.delayed(const Duration(milliseconds: 1500), () {
+    try {
+      await ref.read(authServiceProvider).signIn(
+            email: email,
+            password: password,
+          );
+
       if (mounted) {
-        setState(() => _isLoading = false);
         context.go('/dashboard-demo');
       }
-    });
+    } on AuthException catch (error) {
+      if (mounted) {
+        AppSnackbar.error(context, error.message);
+      }
+    } on AuthConfigException catch (error) {
+      if (mounted) {
+        AppSnackbar.error(context, error.toString());
+      }
+    } catch (_) {
+      if (mounted) {
+        AppSnackbar.error(context, 'Unable to sign in. Please try again.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override

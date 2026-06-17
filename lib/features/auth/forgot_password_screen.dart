@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme/app_theme_extensions.dart';
 import '../../shared/widgets/index.dart';
+import 'auth_provider.dart';
+import 'auth_service.dart';
 
-class ForgotPasswordScreen extends StatefulWidget {
+class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
 
   bool _isLoading = false;
@@ -25,7 +29,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  void _sendResetLink() {
+  Future<void> _sendResetLink() async {
     setState(() => _emailError = null);
 
     final email = _emailController.text.trim();
@@ -37,14 +41,29 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     setState(() => _isLoading = true);
 
-    Future.delayed(const Duration(milliseconds: 1500), () {
+    try {
+      await ref.read(authServiceProvider).sendPasswordResetEmail(email);
+
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _emailSent = true;
-        });
+        setState(() => _emailSent = true);
       }
-    });
+    } on AuthException catch (error) {
+      if (mounted) {
+        AppSnackbar.error(context, error.message);
+      }
+    } on AuthConfigException catch (error) {
+      if (mounted) {
+        AppSnackbar.error(context, error.toString());
+      }
+    } catch (_) {
+      if (mounted) {
+        AppSnackbar.error(context, 'Unable to send reset link. Please try again.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
