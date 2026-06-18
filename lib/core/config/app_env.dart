@@ -1,15 +1,3 @@
 class AppEnv {
   const AppEnv._();
-
-  static const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-  static const supabasePublishableKey = String.fromEnvironment(
-    'SUPABASE_PUBLISHABLE_KEY',
-  );
-  static const apiBaseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'http://localhost:4000/api',
-  );
-
-  static bool get hasSupabaseConfig =>
-      supabaseUrl.isNotEmpty && supabasePublishableKey.isNotEmpty;
 }

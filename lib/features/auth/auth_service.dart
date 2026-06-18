@@ -1,57 +1,81 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+class AuthException implements Exception {
+  final String message;
+  const AuthException(this.message);
 
-import '../../core/config/app_env.dart';
+  @override
+  String toString() => message;
+}
 
 class AuthConfigException implements Exception {
   const AuthConfigException();
 
   @override
   String toString() {
-    return 'Supabase is not configured. Start Flutter with SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY dart defines.';
+    return 'Mock Auth Configuration Exception';
   }
+}
+
+class MockUser {
+  final String id;
+  final String email;
+  final String? phone;
+
+  const MockUser({
+    required this.id,
+    required this.email,
+    this.phone,
+  });
 }
 
 class AuthService {
   AuthService();
 
-  SupabaseClient get _client {
-    if (!AppEnv.hasSupabaseConfig) {
-      throw const AuthConfigException();
-    }
-    return Supabase.instance.client;
-  }
+  MockUser? _currentUser;
 
-  User? get currentUser => _client.auth.currentUser;
+  MockUser? get currentUser => _currentUser;
 
-  Future<AuthResponse> signIn({
+  Future<void> signIn({
     required String email,
     required String password,
-  }) {
-    return _client.auth.signInWithPassword(
+  }) async {
+    // Simulate network delay
+    await Future.delayed(const Duration(milliseconds: 800));
+
+    if (email == 'error@example.com') {
+      throw const AuthException('Invalid email or password.');
+    }
+
+    _currentUser = MockUser(
+      id: 'mock-user-id-123',
       email: email,
-      password: password,
     );
   }
 
-  Future<AuthResponse> signUp({
+  Future<void> signUp({
     required String email,
     required String password,
     String? phone,
-  }) {
-    return _client.auth.signUp(
+  }) async {
+    // Simulate network delay
+    await Future.delayed(const Duration(milliseconds: 800));
+
+    if (email == 'exists@example.com') {
+      throw const AuthException('An account with this email already exists.');
+    }
+
+    _currentUser = MockUser(
+      id: 'mock-user-id-123',
       email: email,
-      password: password,
-      data: {
-        if (phone != null && phone.isNotEmpty) 'phone': phone,
-      },
+      phone: phone,
     );
   }
 
-  Future<void> sendPasswordResetEmail(String email) {
-    return _client.auth.resetPasswordForEmail(email);
+  Future<void> sendPasswordResetEmail(String email) async {
+    // Simulate network delay
+    await Future.delayed(const Duration(milliseconds: 500));
   }
 
-  Future<void> signOut() {
-    return _client.auth.signOut();
+  Future<void> signOut() async {
+    _currentUser = null;
   }
 }
