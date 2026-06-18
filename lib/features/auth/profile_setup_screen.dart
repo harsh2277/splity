@@ -5,14 +5,17 @@ import '../../core/theme/app_theme_extensions.dart';
 import '../../core/constants/app_constants.dart';
 import '../../shared/widgets/index.dart';
 
-class ProfileSetupScreen extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'auth_provider.dart';
+
+class ProfileSetupScreen extends ConsumerStatefulWidget {
   const ProfileSetupScreen({super.key});
 
   @override
-  State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
+  ConsumerState<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
 }
 
-class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
+class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _upiController = TextEditingController();
 
@@ -33,7 +36,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     super.dispose();
   }
 
-  void _submitProfile() {
+  Future<void> _submitProfile() async {
     setState(() {
       _nameError = null;
       _upiError = null;
@@ -64,14 +67,26 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       _isLoading = true;
     });
 
-    Future.delayed(const Duration(milliseconds: 1800), () {
+    try {
+      await ref.read(authServiceProvider).completeProfileSetup(
+            name: name,
+            upiId: upi,
+            avatar: _avatars[_selectedAvatarIndex],
+          );
+      if (mounted) {
+        context.go('/dashboard-demo');
+      }
+    } catch (e) {
+      if (mounted) {
+        AppSnackbar.error(context, e.toString());
+      }
+    } finally {
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
-        context.go('/dashboard-demo');
       }
-    });
+    }
   }
 
   @override

@@ -1,4 +1,10 @@
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
+import '../../core/config/app_env.dart';
+import '../auth/auth_service.dart';
+import '../auth/auth_provider.dart';
+import '../groups/groups_provider.dart';
 
 class Expense {
   final String title;
@@ -18,59 +24,48 @@ class Expense {
     required this.category,
     required this.date,
   });
+
+  factory Expense.fromJson(Map<String, dynamic> json) {
+    return Expense(
+      title: json['title'] as String,
+      subtitle: json['subtitle'] as String,
+      amount: json['amount'] as String,
+      isOwed: json['isOwed'] as bool,
+      isPersonal: json['isPersonal'] as bool,
+      category: json['category'] as String,
+      date: json['date'] as String,
+    );
+  }
 }
 
 class ExpensesNotifier extends StateNotifier<List<Expense>> {
-  ExpensesNotifier()
-      : super([
-          Expense(
-            title: 'Chai & Samosa',
-            subtitle: 'Office Chai Group • Paid by Aman',
-            amount: '₹45.00',
-            isOwed: true,
-            isPersonal: false,
-            category: 'food',
-            date: 'Today, 4:30 PM',
-          ),
-          Expense(
-            title: 'Uber ride to Client Office',
-            subtitle: 'Personal Log',
-            amount: '₹240.00',
-            isOwed: false,
-            isPersonal: true,
-            category: 'travel',
-            date: 'Today, 2:15 PM',
-          ),
-          Expense(
-            title: 'Team Lunch (Pizza)',
-            subtitle: 'Paid by You • Split equally',
-            amount: '₹1,250.00',
-            isOwed: false,
-            isPersonal: false,
-            category: 'food',
-            date: 'Yesterday, 1:10 PM',
-          ),
-          Expense(
-            title: 'Monthly Internet subscription',
-            subtitle: 'Personal Log',
-            amount: '₹799.00',
-            isOwed: false,
-            isPersonal: true,
-            category: 'bills',
-            date: '1 Jun 2026',
-          ),
-          Expense(
-            title: 'Printouts & Stationery',
-            subtitle: 'Office Admin • Paid by Rohit',
-            amount: '₹120.00',
-            isOwed: true,
-            isPersonal: false,
-            category: 'other',
-            date: '30 May 2026',
-          ),
-        ]);
+  final AuthService _authService;
+  final Ref _ref;
 
-  void addExpense({
+  ExpensesNotifier(this._authService, this._ref) : super([]) {
+    fetchExpenses();
+  }
+
+  Map<String, String> get _headers => {
+    'Content-Type': 'application/json',
+    if (_authService.jwtToken != null) 'Authorization': 'Bearer ${_authService.jwtToken}',
+  };
+
+  Future<void> fetchExpenses() async {
+    if (_authService.jwtToken == null) return;
+    try {
+      final url = Uri.parse('${AppEnv.apiBaseUrl}/expenses');
+      final response = await http.get(url, headers: _headers);
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        state = data.map((e) => Expense.fromJson(e)).toList();
+      }
+    } catch (e) {
+      print('Error fetching expenses: $e');
+    }
+  }
+
+  Future<void> addExpense({
     required String title,
     required double amount,
     required String groupName,
@@ -79,38 +74,43 @@ class ExpensesNotifier extends StateNotifier<List<Expense>> {
     required bool isPaidByMe,
     String? payerName,
     String? splitMethod,
-  }) {
-    final amountText = '₹${amount.toStringAsFixed(2)}';
-    String subtitleText;
-    bool isOwedExpense = false;
-
-    if (isPersonal) {
-      subtitleText = 'Personal Log';
-    } else {
-      final splitStr = splitMethod ?? 'Split equally';
-      if (isPaidByMe) {
-        subtitleText = 'Paid by You • $splitStr';
-      } else {
-        final payer = payerName ?? 'Partner';
-        subtitleText = '$groupName • Paid by $payer • $splitStr';
-        isOwedExpense = true;
+  }) async {
+    String? groupId;
+    if (!isPersonal) {
+      final groups = _ref.read(groupsProvider);
+      // Try to find the group matching name, fallback to first group if not found
+      final matchingGroups = groups.where((g) => g.name == groupName);
+      if (matchingGroups.isNotEmpty) {
+        groupId = matchingGroups.first.id;
+      } else if (groups.isNotEmpty) {
+        groupId = groups.first.id;
       }
     }
 
-    final newExpense = Expense(
-      title: title,
-      subtitle: subtitleText,
-      amount: amountText,
-      isOwed: isOwedExpense,
-      isPersonal: isPersonal,
-      category: category.toLowerCase(),
-      date: 'Today, Just Now',
+    final url = Uri.parse('${AppEnv.apiBaseUrl}/expenses');
+    final response = await http.post(
+      url,
+      headers: _headers,
+      body: jsonEncode({
+        'title': title,
+        'amount': amount,
+        'category': category,
+        'isPersonal': isPersonal,
+        'groupId': groupId,
+      }),
     );
 
-    state = [newExpense, ...state];
+    if (response.statusCode == 201) {
+      await fetchExpenses();
+      // Also trigger a refresh of groups to recalculate balances
+      _ref.read(groupsProvider.notifier).fetchGroups();
+    } else {
+      throw Exception('Failed to add expense');
+    }
   }
 }
 
 final expensesProvider = StateNotifierProvider<ExpensesNotifier, List<Expense>>((ref) {
-  return ExpensesNotifier();
+  final authService = ref.watch(authServiceProvider);
+  return ExpensesNotifier(authService, ref);
 });

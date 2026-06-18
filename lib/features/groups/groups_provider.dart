@@ -1,4 +1,9 @@
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
+import '../../core/config/app_env.dart';
+import '../auth/auth_service.dart';
+import '../auth/auth_provider.dart';
 
 class Group {
   final String id;
@@ -22,6 +27,20 @@ class Group {
     required this.balance,
     this.imageUrl,
   });
+
+  factory Group.fromJson(Map<String, dynamic> json) {
+    return Group(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      companyName: json['companyName'] as String,
+      type: json['type'] as String,
+      inviteCode: json['inviteCode'] as String,
+      approvalRequired: json['approvalRequired'] as bool,
+      membersCount: json['membersCount'] as int,
+      balance: json['balance'] as String,
+      imageUrl: json['imageUrl'] as String?,
+    );
+  }
 
   Group copyWith({
     String? id,
@@ -49,90 +68,79 @@ class Group {
 }
 
 class GroupsNotifier extends StateNotifier<List<Group>> {
-  GroupsNotifier()
-      : super([
-          Group(
-            id: '1',
-            name: 'Office Chai',
-            companyName: 'Splity Corp',
-            type: 'Office',
-            inviteCode: 'CHAI24',
-            approvalRequired: false,
-            membersCount: 8,
-            balance: 'Owe ₹40.00',
-          ),
-          Group(
-            id: '2',
-            name: 'Friday Lunch',
-            companyName: 'Splity Corp',
-            type: 'Office',
-            inviteCode: 'LUNCH5',
-            approvalRequired: true,
-            membersCount: 5,
-            balance: 'Owed ₹450.00',
-          ),
-          Group(
-            id: '3',
-            name: 'Flatmates',
-            companyName: 'Home',
-            type: 'Home',
-            inviteCode: 'FLAT99',
-            approvalRequired: false,
-            membersCount: 3,
-            balance: 'Settled',
-          ),
-        ]);
+  final AuthService _authService;
 
-  Group createGroup({
+  GroupsNotifier(this._authService) : super([]) {
+    fetchGroups();
+  }
+
+  Map<String, String> get _headers => {
+    'Content-Type': 'application/json',
+    if (_authService.jwtToken != null) 'Authorization': 'Bearer ${_authService.jwtToken}',
+  };
+
+  Future<void> fetchGroups() async {
+    if (_authService.jwtToken == null) return;
+    try {
+      final url = Uri.parse('${AppEnv.apiBaseUrl}/groups');
+      final response = await http.get(url, headers: _headers);
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        state = data.map((g) => Group.fromJson(g)).toList();
+      }
+    } catch (e) {
+      print('Error fetching groups: $e');
+    }
+  }
+
+  Future<Group> createGroup({
     required String name,
     required String companyName,
     required String type,
     required bool approvalRequired,
     String? imageUrl,
-  }) {
-    final newId = (state.length + 1).toString();
-    // Generate a random 6-character invite code
-    final inviteCode = name.replaceAll(' ', '').toUpperCase().padRight(4, 'X').substring(0, 4) +
-        newId.padLeft(2, '0');
-        
-    final newGroup = Group(
-      id: newId,
-      name: name,
-      companyName: companyName,
-      type: type,
-      inviteCode: inviteCode,
-      approvalRequired: approvalRequired,
-      membersCount: 1, // Created by current user, starts with 1 member
-      balance: 'Settled',
-      imageUrl: imageUrl,
+  }) async {
+    final url = Uri.parse('${AppEnv.apiBaseUrl}/groups');
+    final response = await http.post(
+      url,
+      headers: _headers,
+      body: jsonEncode({
+        'name': name,
+        'companyName': companyName,
+        'type': type,
+        'approvalRequired': approvalRequired,
+        'imageUrl': imageUrl,
+      }),
     );
-    state = [...state, newGroup];
+
+    if (response.statusCode != 201) {
+      throw Exception('Failed to create group');
+    }
+
+    final newGroup = Group.fromJson(jsonDecode(response.body));
+    state = [newGroup, ...state];
     return newGroup;
   }
 
-  bool joinGroup(String code) {
-    final sanitizedCode = code.trim().toUpperCase();
-    // Check if group with invite code already exists in active list
-    if (state.any((g) => g.inviteCode == sanitizedCode)) {
-      return false; // Already joined
-    }
-    
-    // Simulate joining an existing group
-    final joinedGroup = Group(
-      id: (state.length + 1).toString(),
-      name: 'Joined Group',
-      companyName: 'External',
-      type: 'Other',
-      inviteCode: sanitizedCode,
-      approvalRequired: false,
-      membersCount: 4,
-      balance: 'Settled',
+  Future<bool> joinGroup(String code) async {
+    final url = Uri.parse('${AppEnv.apiBaseUrl}/groups/join');
+    final response = await http.post(
+      url,
+      headers: _headers,
+      body: jsonEncode({'code': code}),
     );
-    state = [...state, joinedGroup];
+
+    if (response.statusCode != 200) {
+      return false;
+    }
+
+    final joinedGroup = Group.fromJson(jsonDecode(response.body));
+    state = [joinedGroup, ...state];
     return true;
   }
 }
 
 final groupsProvider = StateNotifierProvider<GroupsNotifier, List<Group>>((ref) {
-  return GroupsNotifier();
+  final authService = ref.watch(authServiceProvider);
+  return GroupsNotifier(authService);
 });

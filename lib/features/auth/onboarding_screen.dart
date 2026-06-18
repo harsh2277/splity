@@ -7,14 +7,17 @@ import '../../core/theme/app_theme_extensions.dart';
 import '../../core/constants/app_constants.dart';
 import '../../shared/widgets/index.dart';
 
-class OnboardingScreen extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'auth_provider.dart';
+
+class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentIndex = 0;
   Timer? _autoScrollTimer;
@@ -226,7 +229,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       color: Colors.transparent,
                       child: InkWell(
                         borderRadius: BorderRadius.circular(AppConstants.radiusFull),
-                        onTap: () => context.go('/profile-setup'),
+                        onTap: () async {
+                          try {
+                            await ref.read(authServiceProvider).signInWithGoogle();
+                            if (mounted) {
+                              context.go('/profile-setup');
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              AppSnackbar.error(context, e.toString());
+                            }
+                          }
+                        },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [

@@ -38,7 +38,7 @@ class _JoinGroupScreenState extends ConsumerState<JoinGroupScreen> with SingleTi
     super.dispose();
   }
 
-  void _submitCode(String code) {
+  Future<void> _submitCode(String code) async {
     if (code.trim().length < 4) {
       setState(() {
         _codeError = 'Invite Code must be at least 4 characters';
@@ -51,10 +51,10 @@ class _JoinGroupScreenState extends ConsumerState<JoinGroupScreen> with SingleTi
       _codeError = null;
     });
 
-    Future.delayed(const Duration(milliseconds: 1200), () {
-      if (!mounted) return;
-      final success = ref.read(groupsProvider.notifier).joinGroup(code);
+    try {
+      final success = await ref.read(groupsProvider.notifier).joinGroup(code);
       
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
@@ -70,7 +70,14 @@ class _JoinGroupScreenState extends ConsumerState<JoinGroupScreen> with SingleTi
           _codeError = 'Already a member of this group or code is invalid.';
         });
       }
-    });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        AppSnackbar.error(context, e.toString());
+      }
+    }
   }
 
   @override

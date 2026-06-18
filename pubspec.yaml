@@ -38,6 +38,7 @@ dependencies:
   # State Management & Routing
   flutter_riverpod: ^2.5.1
   go_router: ^13.2.0
+  http: ^1.2.1
 
   # Push & Local Notifications
   onesignal_flutter: ^5.1.0

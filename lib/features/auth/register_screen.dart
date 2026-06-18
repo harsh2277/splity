@@ -185,7 +185,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       await ref.read(authServiceProvider).signUp(
             email: email,
             password: password,
-            phone: fullPhone,
+            name: email.split('@')[0],
           );
 
       if (mounted) {

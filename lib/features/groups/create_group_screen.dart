@@ -108,7 +108,7 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
     }
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     setState(() {
       _nameError = null;
     });
@@ -127,16 +127,16 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
       _isLoading = true;
     });
 
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (!mounted) return;
-      
-      final newGroup = ref.read(groupsProvider.notifier).createGroup(
+    try {
+      final newGroup = await ref.read(groupsProvider.notifier).createGroup(
         name: name,
         companyName: company.isEmpty ? 'Personal' : company,
         type: _selectedType,
         approvalRequired: _approvalRequired,
         imageUrl: _imageFile != null ? _imageFile!.path : 'preset_icon:$_selectedGraphic',
       );
+
+      if (!mounted) return;
 
       setState(() {
         _isLoading = false;
@@ -169,7 +169,14 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
           context.pop(); // Pop CreateGroupScreen back to groups list
         }
       });
-    });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        AppSnackbar.error(context, e.toString());
+      }
+    }
   }
 
   @override
