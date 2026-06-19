@@ -7,6 +7,7 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || `http://localhost:${PORT}`;
 
 // Local secret key for HS256 local JWTs
 const LOCAL_SECRET = new TextEncoder().encode(
@@ -23,6 +24,16 @@ const authStates = {};
 // Basic health check route
 app.get('/health', (req, res) => {
   res.json({ status: 'healthy', timestamp: new Date() });
+});
+
+// Root path handler to catch and redirect auth callbacks
+app.get('/', (req, res) => {
+  console.log('Root path accessed with query:', req.query);
+  const { stateId, neon_auth_session_verifier } = req.query;
+  if (stateId && neon_auth_session_verifier) {
+    return res.redirect(`/api/auth/callback?stateId=${stateId}&neon_auth_session_verifier=${neon_auth_session_verifier}`);
+  }
+  res.send('Welcome to Splity Backend!');
 });
 
 // Helper: Calculate group balance for a user
@@ -69,7 +80,7 @@ app.get('/api/auth/google-start', (req, res) => {
     return res.status(400).send('Missing stateId query parameter.');
   }
 
-  const callbackUrl = `http://127.0.0.1:4000/api/auth/callback?stateId=${stateId}`;
+  const callbackUrl = `${PUBLIC_BASE_URL}/api/auth/callback?stateId=${stateId}`;
 
   res.send(`
     <!DOCTYPE html>
@@ -158,7 +169,7 @@ app.get('/api/auth/google-start', (req, res) => {
           })
           .catch(err => {
             console.error(err);
-            document.body.innerHTML = '<div class="card"><h1>Connection Failed</h1><p>Unable to initiate secure sign-in. Please try again.</p></div>';
+            document.body.innerHTML = '<div class="card"><h1>Connection Failed</h1><p>' + err.toString() + '</p></div>';
           });
         </script>
       </body>
@@ -465,6 +476,68 @@ app.get('/api/auth/poll/:stateId', (req, res) => {
   res.json({ status: 'pending' });
 });
 
+// Endpoint to verify Google Native ID Token and generate session JWT
+const GOOGLE_JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'));
+app.post('/api/auth/google-native', async (req, res) => {
+  const { idToken } = req.body;
+  if (!idToken) {
+    return res.status(400).json({ error: 'Missing idToken.' });
+  }
+
+  try {
+    const { payload } = await jwtVerify(idToken, GOOGLE_JWKS, {
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const googleUserId = payload.sub;
+    const email = payload.email;
+    const name = payload.name;
+    const avatar = payload.picture || '👨‍💻';
+
+    // Fetch or initialize profile in postgres database
+    const profileResult = await db.query('SELECT * FROM public.profiles WHERE id = $1', [googleUserId]);
+    let finalProfile;
+    if (profileResult.rows.length === 0) {
+      const insertResult = await db.query(
+        `INSERT INTO public.profiles (id, name, email, avatar) 
+         VALUES ($1, $2, $3, $4) 
+         RETURNING *`,
+        [googleUserId, name || email.split('@')[0], email, avatar]
+      );
+      finalProfile = insertResult.rows[0];
+    } else {
+      finalProfile = profileResult.rows[0];
+    }
+
+    // Generate local JWT token
+    const token = await new SignJWT({
+      id: finalProfile.id,
+      email: finalProfile.email,
+      name: finalProfile.name,
+      image: finalProfile.avatar
+    })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime('30d')
+      .sign(LOCAL_SECRET);
+
+    res.json({
+      success: true,
+      jwt: token,
+      user: {
+        id: finalProfile.id,
+        email: finalProfile.email,
+        name: finalProfile.name,
+        avatar: finalProfile.avatar,
+        upiId: finalProfile.upi_id
+      }
+    });
+  } catch (err) {
+    console.error('Google native auth error:', err);
+    res.status(401).json({ error: 'Invalid Google ID Token: ' + err.message });
+  }
+});
+
 // -------------------------------------------------------------------
 // 1. Profile Routes
 // -------------------------------------------------------------------
@@ -492,7 +565,7 @@ app.get('/api/profile', requireAuth, async (req, res) => {
 
 app.post('/api/profile', requireAuth, async (req, res) => {
   const { id, email } = req.user;
-  const { name, upi_id, avatar } = req.body;
+  const { name, upi_id, avatar, phone } = req.body;
 
   if (!name) {
     return res.status(400).json({ error: 'Name is required' });
@@ -500,15 +573,16 @@ app.post('/api/profile', requireAuth, async (req, res) => {
 
   try {
     const result = await db.query(
-      `INSERT INTO public.profiles (id, name, email, upi_id, avatar, updated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())
+      `INSERT INTO public.profiles (id, name, email, upi_id, avatar, phone, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW())
        ON CONFLICT (id) DO UPDATE SET
          name = EXCLUDED.name,
          upi_id = EXCLUDED.upi_id,
          avatar = EXCLUDED.avatar,
+         phone = EXCLUDED.phone,
          updated_at = NOW()
        RETURNING *`,
-      [id, name, email, upi_id || null, avatar || '👨‍💻']
+      [id, name, email, upi_id || null, avatar || '👨‍💻', phone || null]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -891,6 +965,12 @@ app.post('/api/expenses', requireAuth, async (req, res) => {
 });
 
 // Start listening
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Splity backend listening on port ${PORT}`);
+  try {
+    await db.query('ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS phone TEXT;');
+    console.log('Database profiles table migration completed (phone column ensured).');
+  } catch (err) {
+    console.error('Database migration failed:', err);
+  }
 });

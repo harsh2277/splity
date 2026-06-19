@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../core/config/app_env.dart';
 
 class AuthException implements Exception {
@@ -27,6 +28,7 @@ class AppUser {
   final String name;
   final String? avatar;
   final String? upiId;
+  final String? phone;
 
   const AppUser({
     required this.id,
@@ -34,6 +36,7 @@ class AppUser {
     required this.name,
     this.avatar,
     this.upiId,
+    this.phone,
   });
 
   factory AppUser.fromJson(Map<String, dynamic> json) {
@@ -43,6 +46,7 @@ class AppUser {
       name: json['name'] as String,
       avatar: json['avatar'] as String?,
       upiId: json['upi_id'] as String?,
+      phone: json['phone'] as String?,
     );
   }
 }
@@ -84,6 +88,7 @@ class AuthService {
       'name': user.name,
       'avatar': user.avatar,
       'upi_id': user.upiId,
+      'phone': user.phone,
     }));
   }
 
@@ -92,18 +97,29 @@ class AuthService {
     required String password,
   }) async {
     final url = Uri.parse('${AppEnv.neonAuthBaseUrl}/sign-in/email');
+    print('AuthService: Requesting POST $url');
     final response = await http.post(
       url,
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Origin': 'http://localhost:4000',
+      },
       body: jsonEncode({
         'email': email,
         'password': password,
       }),
     );
 
+    print('AuthService: Response Status: ${response.statusCode}');
+    print('AuthService: Response Body: ${response.body}');
+
     if (response.statusCode != 200) {
-      final errData = jsonDecode(response.body);
-      throw AuthException(errData['message'] ?? 'Invalid email or password.');
+      Map<String, dynamic>? errData;
+      try {
+        errData = jsonDecode(response.body) as Map<String, dynamic>;
+      } catch (_) {}
+      final msg = errData != null ? (errData['message'] ?? errData['error']) : null;
+      throw AuthException(msg ?? 'Invalid email or password. Status: ${response.statusCode}');
     }
 
     // Capture cookie
@@ -146,11 +162,16 @@ class AuthService {
     required String email,
     required String password,
     required String name,
+    String? phone,
   }) async {
     final url = Uri.parse('${AppEnv.neonAuthBaseUrl}/sign-up/email');
+    print('AuthService: Requesting POST $url');
     final response = await http.post(
       url,
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Origin': 'http://localhost:4000',
+      },
       body: jsonEncode({
         'email': email,
         'password': password,
@@ -158,9 +179,16 @@ class AuthService {
       }),
     );
 
+    print('AuthService: Response Status: ${response.statusCode}');
+    print('AuthService: Response Body: ${response.body}');
+
     if (response.statusCode != 200) {
-      final errData = jsonDecode(response.body);
-      throw AuthException(errData['message'] ?? 'Sign up failed.');
+      Map<String, dynamic>? errData;
+      try {
+        errData = jsonDecode(response.body) as Map<String, dynamic>;
+      } catch (_) {}
+      final msg = errData != null ? (errData['message'] ?? errData['error']) : null;
+      throw AuthException(msg ?? 'Sign up failed. Status: ${response.statusCode}');
     }
 
     // Capture cookie
@@ -193,6 +221,7 @@ class AuthService {
       body: jsonEncode({
         'name': name,
         'avatar': '👨‍💻',
+        'phone': phone,
       }),
     );
 
@@ -207,49 +236,42 @@ class AuthService {
   }
 
   Future<void> signInWithGoogle() async {
-    final stateId = '${DateTime.now().millisecondsSinceEpoch}_${(100 + (DateTime.now().microsecondsSinceEpoch % 900))}';
-    final startUrl = Uri.parse('${AppEnv.apiBaseUrl}/auth/google-start?stateId=$stateId');
-    
     try {
-      await launchUrl(
-        startUrl,
-        mode: LaunchMode.inAppBrowserView,
+      final googleSignIn = GoogleSignIn(
+        scopes: ['email', 'profile'],
+        serverClientId: '864815036763-ab1ls1v4jru9du4pqgbj7h5sk4pvujl6.apps.googleusercontent.com',
       );
-    } catch (e) {
-      throw AuthException('Could not launch Google sign-in: ${e.toString()}');
-    }
-    
-    // Poll the backend until the login is completed or times out (2 minutes)
-    final pollUrl = Uri.parse('${AppEnv.apiBaseUrl}/auth/poll/$stateId');
-    bool isAuthenticated = false;
-    int attempts = 0;
-    
-    while (!isAuthenticated && attempts < 60) {
-      await Future.delayed(const Duration(seconds: 2));
-      attempts++;
-      
-      try {
-        final pollResponse = await http.get(pollUrl);
-        if (pollResponse.statusCode == 200) {
-          final pollData = jsonDecode(pollResponse.body);
-          if (pollData['status'] == 'success') {
-            final jwt = pollData['jwt'] as String;
-            final user = AppUser.fromJson(pollData['user']);
-            
-            await _saveSession(user, jwt, null);
-            isAuthenticated = true;
-            
-            // Try to close the Custom Tab popup view
-            await closeInAppWebView();
-          }
-        }
-      } catch (e) {
-        print('Polling error: $e');
+      final account = await googleSignIn.signIn();
+      if (account == null) {
+        throw const AuthException('Google sign-in cancelled.');
       }
-    }
-    
-    if (!isAuthenticated) {
-      throw const AuthException('Sign-in timed out. Please try again.');
+
+      final authentication = await account.authentication;
+      final idToken = authentication.idToken;
+      if (idToken == null) {
+        throw const AuthException('Failed to retrieve Google identity token.');
+      }
+
+      final url = Uri.parse('${AppEnv.apiBaseUrl}/auth/google-native');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'idToken': idToken}),
+      );
+
+      if (response.statusCode != 200) {
+        final errData = jsonDecode(response.body);
+        throw AuthException(errData['error'] ?? 'Google native authentication failed.');
+      }
+
+      final resData = jsonDecode(response.body);
+      final jwt = resData['jwt'] as String;
+      final user = AppUser.fromJson(resData['user']);
+
+      await _saveSession(user, jwt, null);
+    } catch (e) {
+      if (e is AuthException) rethrow;
+      throw AuthException('Google sign-in failed: ${e.toString()}');
     }
   }
 

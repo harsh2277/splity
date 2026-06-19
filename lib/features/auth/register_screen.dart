@@ -165,8 +165,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       hasError = true;
     }
 
-    if (password.length < 6) {
-      setState(() => _passwordError = 'Password must be at least 6 characters');
+    if (password.length < 8) {
+      setState(() => _passwordError = 'Password must be at least 8 characters');
       hasError = true;
     }
 
@@ -186,6 +186,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             email: email,
             password: password,
             name: email.split('@')[0],
+            phone: fullPhone,
           );
 
       if (mounted) {
@@ -199,9 +200,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (mounted) {
         AppSnackbar.error(context, error.toString());
       }
-    } catch (_) {
+    } catch (e) {
+      print('Registration error: $e');
       if (mounted) {
-        AppSnackbar.error(context, 'Unable to create account. Please try again.');
+        AppSnackbar.error(context, e.toString());
       }
     } finally {
       if (mounted) {
@@ -290,7 +292,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               AppTextField(
                 controller: _passwordController,
                 label: 'Password',
-                hint: 'Min. 6 characters',
+                hint: 'Min. 8 characters',
                 errorText: _passwordError,
                 isPassword: true,
                 textInputAction: TextInputAction.next,

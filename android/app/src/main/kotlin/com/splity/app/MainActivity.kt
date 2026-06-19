@@ -1,4 +1,4 @@
-package com.splity.splity
+package com.splity.app
 
 import io.flutter.embedding.android.FlutterActivity
 

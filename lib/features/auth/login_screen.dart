@@ -46,8 +46,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       hasError = true;
     }
 
-    if (password.length < 6) {
-      setState(() => _passwordError = 'Password must be at least 6 characters');
+    if (password.length < 8) {
+      setState(() => _passwordError = 'Password must be at least 8 characters');
       hasError = true;
     }
 
@@ -72,9 +72,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (mounted) {
         AppSnackbar.error(context, error.toString());
       }
-    } catch (_) {
+    } catch (e) {
+      print('Sign-in error: $e');
       if (mounted) {
-        AppSnackbar.error(context, 'Unable to sign in. Please try again.');
+        AppSnackbar.error(context, e.toString());
       }
     } finally {
       if (mounted) {
